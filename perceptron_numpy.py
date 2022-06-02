@@ -6,7 +6,7 @@
 import matplotlib.pyplot as plt
 # import matplotlib.random as random
 import random
-import numpy as np
+import numpy as np1
 
 # Define basic vars
 random.seed(7)
@@ -22,6 +22,9 @@ y_train = [1.0, 1.0, 1.0, -1.0]
 
 # weights
 w = [0.2, -0.6, 0.25]
+
+# weights as given for a multi perceptron. In this case, with two neurons
+wm = [[0.2, -0.6, 0.25], [0.23, -0.62, 0.27]]
 
 #somewhere to store out plot
 final_plot = None
@@ -53,6 +56,7 @@ def show_learning(w):
     # for the denominator
     #
     # we're looking at the reality that if our weighted sum of inputs is lt or gt 0
+    # so let's avoid divide by 0 errors, k?
     if abs(w[2]) < 1e-5:
         y = [-w[1]/(1e-5)*(-2.0)+(w[0]/(1e-5)),
             -w[1]/(1e-5)*(2.0)+(-w[0]/(1e-5))]
