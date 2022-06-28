@@ -6,7 +6,7 @@
 import matplotlib.pyplot as plt
 # import matplotlib.random as random
 import random
-import numpy as np1
+import numpy as np
 
 # Define basic vars
 random.seed(7)
