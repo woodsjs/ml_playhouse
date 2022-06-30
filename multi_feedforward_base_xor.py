@@ -39,7 +39,7 @@ def show_learning():
     print('Current Weights')
     for i, w in enumerate(neuron_weights):
         print(
-            f'neuron {i} : w0={w[0]: 5.2f}, w1={w[1]: 5.2f }, w2={w[2]: 5.2f}')
+            f'neuron {i} : w0={w[0]:5.2f}, w1={w[1]:5.2f}, w2={w[2]:5.2f}')
         print(f'{"-"*10}')
 
 def forward_pass(x):
@@ -99,3 +99,26 @@ def adjust_weights(x):
     # we have to use ALL inputs into a neuron when adjusting the weight!!!!
     layer_two_inputs = np.array([1.0, neuron_outputs[0], neuron_outputs[1]])
     neuron_weights[2] -= (layer_two_inputs * LEARNING_RATE * neuron_errors[2])
+
+all_correct = False
+
+# This won't always converge. Sometimes a function is unlearnable...
+# sometimes we just have goofy input values
+while not all_correct:
+    all_correct = True
+
+    np.random.shuffle(index_list)
+
+    for i in index_list:
+        forward_pass(X_train[i])
+        backward_pass(y_train[i])
+        adjust_weights(X_train[i])
+        show_learning()
+    
+    # Here we're "testing" the output to ensure all of our yhats are correct
+    # we iterate through the while loop until this happens
+    for i in range(len(X_train)):
+        forward_pass(X_train[i])
+        print(f'x1 = {X_train[i][1]:4.1f}, x2= {X_train[i][2]:4.1f}, y = {neuron_outputs[2]:.4f}')
+        if (((y_train[i] < 0.5) and (neuron_outputs[2] >= 0.5)) or ((y_train[i] >= 0.5) and (neuron_outputs[2] < 0.5))):
+                all_correct = False
