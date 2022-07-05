@@ -14,3 +14,15 @@ print(f'dimensions of train_images: {train_images.shape}')
 print(f'dimensions of train_labels: {train_labels.shape}')
 print(f'dimensions of test_images: {test_images.shape}')
 print(f'dimensions of test_labels: {test_labels.shape}')
+
+# Print a training example
+print(f'Label for first training example {train_labels[0]}')
+print(f'---beginning of pattern for first training example---')
+for line in train_images[0]:
+    for num in line:
+        if num > 0:
+            print('*', end = ' ')
+        else:
+            print(' ', end = ' ')
+    print('')
+print('---end of pattern for first training example---')
