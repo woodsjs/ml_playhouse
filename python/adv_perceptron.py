@@ -36,3 +36,36 @@ def compute_output(w, v):
         return -1
     else:
         return 1
+    
+# This is the meat and potatoes
+# Perceptron training loop
+all_correct = False
+
+while not all_correct:
+    all_correct = True
+    random.shuffle(index_list)
+
+    # take the randomized list vals in
+    for i in index_list:
+        x = x_train[i]
+        y = y_train[i]
+
+        # run the perceptron function on each list item
+        p_out = compute_output(w, x)
+        
+        # our output doesn't match our ground truth
+        if y != p_out:
+            # we're going to adjust the weights
+            for j in range(0, len(w)):
+
+                # take a weight from the list and add it to
+                # our ground truth, multiplied by the learning rate, multiplied by 
+                # our matching input value
+                # This moves our weight up or down, based on the ground truth's positive
+                # or negative value
+                w[j] += (y * LEARNING_RATE * x[j])
+
+            all_correct = False
+
+            show_learning(w)
+
