@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <random>
 #include <vector>
 
@@ -42,13 +44,15 @@ void show_learning(std::vector<double> w)
 
 int compute_output(std::vector<double> w, std::vector<double> v)
 {
-    auto z = 0.0;
 
-    for (auto i = 0; i < w.size(); i++)
-    {
-        // this would be better with std::reduce, accumulate, etc
-        z += v[i] * w[i]; // weighted sum of inputs
-    }
+    // ick. why the bad output?
+    double z = 0.0;
+    // std::vector<double> mult_intermediate(w.size());
+
+    z = std::inner_product(v.begin(), v.end(), w.begin(), 0);
+    // fun with numbers. We'd use boost here for some goodness?
+    // std::transform(v.begin(), v.end(), w.begin(), mult_intermediate.begin(), [](auto x, auto y) { return x * y; });
+    // z = std::accumulate(mult_intermediate.begin(), mult_intermediate.end(), 0);
 
     // signum function
     if (z < 0)
