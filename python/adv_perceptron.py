@@ -1,4 +1,5 @@
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 
 # plot vars
@@ -56,15 +57,22 @@ show_learning(w)
 def compute_output(w, v):
     z = 0.0
     
-    for i in range( len(w) ):
-        z += v[i] * w[i] # weighted sum of inputs
+    # TODO: remove
+    # for i in range( len(w) ):
+    #     z += v[i] * w[i] # weighted sum of inputs
     
+    z = np.dot(w, x)
+
     # signum function
-    if z < 0: 
-        return -1
-    else:
-        return 1
+
+    # TODO: remove
+    # if z < 0: 
+    #     return -1
+    # else:
+    #     return 1
     
+    return np.sign(z)
+
 # This is the meat and potatoes
 # Perceptron training loop
 all_correct = False

@@ -1,4 +1,7 @@
+#include <algorithm>
 #include <iostream>
+#include <iterator>
+#include <numeric>
 #include <random>
 #include <vector>
 
@@ -42,13 +45,11 @@ void show_learning(std::vector<double> w)
 
 int compute_output(std::vector<double> w, std::vector<double> v)
 {
-    auto z = 0.0;
+    std::vector<double> mult_intermediate(w.size(), 0);
 
-    for (auto i = 0; i < w.size(); i++)
-    {
-        // this would be better with std::reduce, accumulate, etc
-        z += v[i] * w[i]; // weighted sum of inputs
-    }
+    // fun with numbers. We'd use boost here for some goodness?
+    std::transform(v.begin(), v.end(), w.begin(), mult_intermediate.begin(), [](auto x, auto y){ return x * y; });
+    auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y){return(x+y);});
 
     // signum function
     if (z < 0)
