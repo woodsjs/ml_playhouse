@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -44,15 +45,11 @@ void show_learning(std::vector<double> w)
 
 int compute_output(std::vector<double> w, std::vector<double> v)
 {
+    std::vector<double> mult_intermediate(w.size(), 0);
 
-    // ick. why the bad output?
-    double z = 0.0;
-    // std::vector<double> mult_intermediate(w.size());
-
-    z = std::inner_product(v.begin(), v.end(), w.begin(), 0);
     // fun with numbers. We'd use boost here for some goodness?
-    // std::transform(v.begin(), v.end(), w.begin(), mult_intermediate.begin(), [](auto x, auto y) { return x * y; });
-    // z = std::accumulate(mult_intermediate.begin(), mult_intermediate.end(), 0);
+    std::transform(v.begin(), v.end(), w.begin(), mult_intermediate.begin(), [](auto x, auto y){ return x * y; });
+    auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y){return(x+y);});
 
     // signum function
     if (z < 0)
