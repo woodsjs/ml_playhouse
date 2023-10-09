@@ -4,10 +4,10 @@ np.random.seed(3)
 LEARNING_RATE = 0.1
 index_list = [0,1,2,3]
 
-x_train = [np.array(1.0, -1.0, -1.0),
-           np.array(1.0, -1.0, 1.0),
-           np.array(1.0, 1.0, -1.0),
-           np.array(1.0, 1.0, 1.0)]
+x_train = [np.array([1.0, -1.0, -1.0]),
+           np.array([1.0, -1.0, 1.0]),
+           np.array([1.0, 1.0, -1.0]),
+           np.array([1.0, 1.0, 1.0])]
 y_train = [0.0, 1.0, 1.0, 0.0]
 
 # Randomly initialize neuron weights from -1.0 to 1.0
@@ -26,10 +26,10 @@ neuron_weights = [init_neuron_weights(2), init_neuron_weights(2), init_neuron_we
 neuron_y = [0,0,0]
 neuron_error = [0,0,0]
 
-def show_learning(w):
+def show_learning():
     global color_index
 
-    for i, w in enumerate(n_w):
+    for i, w in enumerate(neuron_weights):
         print('neuron ', i, 'w0 = ', '%5.2f' % w[0], ', w1 = ' , '%5.2f' %w[1], ', w2 = ', '%5.2f' %w[2])
     
     print("-"*14)
@@ -74,3 +74,56 @@ def forward_pass(x):
     z2 = np.dot(neuron_weights[2], neuron2_inputs)
 
     neuron_y[2] = 1.0/(1.0+np.exp(-z2))
+
+# now let's adjust our weights based on the error
+def backward_pass(y_truth):
+    global neuron_error
+
+    # your loss function derivative, from the output layer
+    error_prime = -(y_truth - neuron_y[2])
+    # and the logistic derivative. Remember, the derivatives build on each other through the layers
+    derivative = neuron_y[2] * (1.0 - neuron_y[2])
+    neuron_error[2] = error_prime * derivative
+
+    # tanh derivative, for the hidden layer
+    derivative = 1.0 - neuron_y[0]**2
+    neuron_error[0] = neuron_weights[2][1] * neuron_error[2] * derivative
+
+    derivative = 1.0 - neuron_y[1]**2
+    neuron_error[1] = neuron_weights[2][2] * neuron_error[2] * derivative
+
+def adjust_weights(x):
+    global neuron_weights
+
+    neuron_weights[0] -= (x * LEARNING_RATE * neuron_error[0])
+    neuron_weights[1] -= (x * LEARNING_RATE * neuron_error[1])
+
+    n2_inputs = np.array([1.0, neuron_y[0], neuron_y[1]])
+    neuron_weights[2] -= (n2_inputs * LEARNING_RATE * neuron_error[2])
+
+# This is the meat and potatoes
+# With our y_train, we should predict 0,1,1,0
+# Or, since this is an XOR, <=0.5, >0.5, >0.5, <=0.5
+all_correct = False
+
+while not all_correct:
+    all_correct = True
+    np.random.shuffle(index_list)
+
+    # take the randomized list vals in
+    for i in index_list:
+        forward_pass(x_train[i])
+        backward_pass(y_train[i])
+        adjust_weights(x_train[i])
+
+        show_learning()
+        
+    for i in range(len(x_train)):
+        forward_pass(x_train[i])
+        print('x1 = ', '%4.1f' % x_train[i][1],
+              ', x2 = ', '%4.1f' % x_train[i][2],
+              ', y = ',  '%4.1f' % neuron_y[2])
+        
+        if(((y_train[i] < 0.5) and (neuron_y[2] >= 0.5))
+           or ((y_train[i] >= 0.5) and (neuron_y[2] < 0.5))):
+            all_correct = False
