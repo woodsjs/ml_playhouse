@@ -1,62 +1,34 @@
 // Once again, we're writing cpp based on python.
 // What you looking at?
 
-// import numpy as np
-
-// np.random.seed(3)
-// LEARNING_RATE = 0.1
-// index_list = [0,1,2,3]
-
-// x_train = [np.array([1.0, -1.0, -1.0]),
-//            np.array([1.0, -1.0, 1.0]),
-//            np.array([1.0, 1.0, -1.0]),
-//            np.array([1.0, 1.0, 1.0])]
-// y_train = [0.0, 1.0, 1.0, 0.0]
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+#include <random>
+#include <vector>
 
 // # Randomly initialize neuron weights from -1.0 to 1.0
 // # This also leaves the bias weight (at pos 0), as a zero
 // # We want to randomly intitialize to break up the symmetry. If the
 // # weights are all the same number, they would all get the same adjustment during backprop.
 // def init_neuron_weights(input_count):
-//     weights = np.zeros(input_count+1)
+std::vector<double> init_neuron_weights(int input_count) {
+    std::vector<double> weights(0.0, input_count+1);
 
-//     for i in range(1, (input_count+1)):
-//         weights[i] = np.random.uniform(-1.0, 1.0)
+    for (auto i = 1; i <= input_count+1; i++){
+        weights[i] = 0; // needs to be some rando thing
+        //         weights[i] = np.random.uniform(-1.0, 1.0)
+    }
 
-//     return weights
+    return weights;
+}
 
-// neuron_weights = [init_neuron_weights(2), init_neuron_weights(2), init_neuron_weights(2)]
-// neuron_y = [0,0,0]
-// neuron_error = [0,0,0]
-
-// def show_learning():
-//     global color_index
-
-//     for i, w in enumerate(neuron_weights):
-//         print('neuron ', i, 'w0 = ', '%5.2f' % w[0], ', w1 = ' , '%5.2f' %w[1], ', w2 = ', '%5.2f' %w[2])
-    
-//     print("-"*14)
-
-//     # if color_index == 0:
-//     #     plt.plot([1.0], [1.0], 'b_', markersize=12)
-//     #     plt.plot([-1.0, 1.0, -1.0], [1.0, -1.0, -1.0], 'r+', markersize=12)
-//     #     plt.axis([-2, 2, -2, 2])
-//     #     plt.xlabel('x1')
-//     #     plt.ylabel('x2')
-
-//     # x = [-2.0, 2.0]
-
-//     # if abs(w[2]) < 1e-5:
-//     #     y = [-w[1]/(1e-5)*(-2.0)+(-w[0]/(1e-5)),
-//     #          -w[1]/(1e-5)*((2.0)+(-w[0]/(1e-5)))]
-//     # else:
-//     #     y = [-w[1]/w[2]*(x[0])+(-w[0]/w[2]),
-//     #          -w[1]/w[2]*(x[1])+(-w[0]/w[2])]
-        
-//     # plt.plot(x, y, color_list[color_index])
-
-//     # if color_index < (len(color_list) - 1):
-//     #     color_index += 1
+void show_learning(std::vector<double> weights){
+    for(auto [w, i] = std::tuple{weights.begin(), 0}; w != weights.end(); w++, i++) {
+        std::cout << "neuron " << i << " w0 = " << w[0] << " w1= " << w[1] << " w[2] = " << w[2] << std::endl;
+    }
+}
 
 // # At the moment this is a two layer, three neuron network
 // # Layer one, the hidden layer, is two neurons.  Layer two is a single neuron output layer
@@ -104,15 +76,49 @@
 //     n2_inputs = np.array([1.0, neuron_y[0], neuron_y[1]])
 //     neuron_weights[2] -= (n2_inputs * LEARNING_RATE * neuron_error[2])
 
-// # This is the meat and potatoes
-// # With our y_train, we should predict 0,1,1,0
-// # Or, since this is an XOR, <=0.5, >0.5, >0.5, <=0.5
-// all_correct = False
+int main()
+{
+    // # define our hyperparams
+    // std::random_device rd;
+    // std::mt19937 mt(rd());
+    // std::uniform_distribution<int> dist(0, 6);
+    // then we use dist(mt) to get our number
 
-// while not all_correct:
-//     all_correct = True
-//     np.random.shuffle(index_list)
+    // random.seed(7)
+    float LEARNING_RATE = 0.1;
+    std::vector<int> index_list = {0, 1, 2, 3}; // will be used to randomize order
 
+    // training examples.Ultimately, like the hyperparams, these should be passed in.
+    // here we include in code as we write it
+    // First element in the vector v must be 1, our Bias value
+    // Len of w, x is n+1 for n inputs
+    
+
+    std::vector<std::vector<double>> x_train = {{1.0, -1.0, -1.0},
+                                                {1.0, -1.0, 1.0},
+                                                {1.0, 1.0, -1.0},
+                                                {1.0, 1.0, 1.0}};
+    std::vector<double> y_train = {0.0, 1.0, 1.0, 0.0}; // ground truth
+
+    // define perceptron weights. THese are arbitrarily chosen.
+    std::vector<double> weights = {0.2, -0.6, 0.25};
+
+
+    std::vector<std::vector<double>> neuron_weights = {init_neuron_weights(2), init_neuron_weights(2), init_neuron_weights(2)};
+    std::vector<double> neuron_y(0.0,3);
+    std::vector<double> neuron_error(0.0,3);
+    // print initial weights
+    show_learning(weights);
+
+    // This is the meat and potatoes Perceptron training loop
+    bool all_correct = false;
+        
+    while (!all_correct)
+    {
+        all_correct = true;
+
+        for (auto i : index_list)
+        {
 //     # take the randomized list vals in
 //     for i in index_list:
 //         forward_pass(x_train[i])
@@ -120,8 +126,15 @@
 //         adjust_weights(x_train[i])
 
 //         show_learning()
-        
-//     for i in range(len(x_train)):
+        // TODO: get that rand working
+        // random.shuffle(index_list)
+
+        // take the randomized list vals in
+        }
+
+        for ( auto i=0; i < x_train.size(); i++)
+        {
+        //     for i in range(len(x_train)):
 //         forward_pass(x_train[i])
 //         print('x1 = ', '%4.1f' % x_train[i][1],
 //               ', x2 = ', '%4.1f' % x_train[i][2],
@@ -130,3 +143,8 @@
 //         if(((y_train[i] < 0.5) and (neuron_y[2] >= 0.5))
 //            or ((y_train[i] >= 0.5) and (neuron_y[2] < 0.5))):
 //             all_correct = False
+        }
+    }
+
+    // plt.show()
+}
