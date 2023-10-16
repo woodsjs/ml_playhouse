@@ -16,29 +16,33 @@
 // def init_neuron_weights(input_count):
 std::vector<double> init_neuron_weights(int input_count)
 {
-    std::vector<double> weights(0.0, input_count + 1);
+    std::vector<double> weights(input_count + 1, 0.0);
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_real_distribution<double> distDoub(-1.0, 1.0); // distribution in range [-1.0, 1.0];
 
-    for (auto i = 1; i <= input_count + 1; i++)
+    for (auto i = 1; i < weights.size(); i++)
     {
-        weights[i] = 0; // needs to be some rando thing
-        //         weights[i] = np.random.uniform(-1.0, 1.0)
+        weights[i] = distDoub(rng); // needs to be some rando thing
     }
 
     return weights;
 }
 
-void show_learning(std::vector<double> weights)
+void show_learning(std::vector<std::vector<double>> weights)
 {
-    for (auto [w, i] = std::tuple{weights.begin(), 0}; w != weights.end(); w++, i++)
+    // std::cout << "weights size " << weights.size();
+    for (auto i = 0.0; i < weights.size(); i++)
     {
-        std::cout << "neuron " << i << " w0 = " << w[0] << " w1= " << w[1] << " w[2] = " << w[2] << std::endl;
+        std::cout.precision(2);
+        std::cout << "neuron " << i << " w0 = " << weights[i][0] << " w1= " << weights[i][1] << " w[2] = " << weights[i][2] << std::endl;
     }
 }
 
 // # At the moment this is a two layer, three neuron network
 // # Layer one, the hidden layer, is two neurons.  Layer two is a single neuron output layer
 // def forward_pass(x):
-void forward_pass(std::vector<double> x, std::vector<double> &neuron_y, std::vector<std::vector<double>> neuron_weights)
+void forward_pass(std::vector<double> x, std::vector<double> neuron_y, std::vector<std::vector<double>> neuron_weights)
 {
     //     global neuron_y
 
@@ -56,7 +60,7 @@ void forward_pass(std::vector<double> x, std::vector<double> &neuron_y, std::vec
     std::transform(x.begin(), x.end(), neuron_weights[1].begin(), mult_intermediate.begin(), [](auto x, auto y)
                    { return x * y; });
     z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                         { return (x + y); });
+                    { return (x + y); });
 
     neuron_y[1] = std::tanh(z);
 
@@ -67,13 +71,13 @@ void forward_pass(std::vector<double> x, std::vector<double> &neuron_y, std::vec
     //     # optimization would be to specify the number of layers and neurons per layer, like a good
     //     # lib does for us, but the goal here IS to see it clearly.  Sometimes that means coding
     //     # it long form, then refactor
-        // dot product. refactor this ugliness
+    // dot product. refactor this ugliness
     std::transform(neuron2_inputs.begin(), neuron2_inputs.end(), neuron_weights[2].begin(), mult_intermediate.begin(), [](auto x, auto y)
                    { return x * y; });
     z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                         { return (x + y); });
+                    { return (x + y); });
     // not sure if this is the right way to do this in c++
-    neuron_y[2] = 1.0/(1.0+std::exp(-z))
+    neuron_y[2] = 1.0 / (1.0 + std::exp(-z));
 }
 
 // # now let's adjust our weights based on the error
@@ -126,10 +130,10 @@ int main()
     std::vector<double> y_train = {0.0, 1.0, 1.0, 0.0}; // ground truth
 
     std::vector<std::vector<double>> neuron_weights = {init_neuron_weights(2), init_neuron_weights(2), init_neuron_weights(2)};
-    std::vector<double> neuron_y(0.0, 3);
-    std::vector<double> neuron_error(0.0, 3);
+    std::vector<double> neuron_y(3, 0.0);
+    std::vector<double> neuron_error(3, 0.0);
     // print initial weights
-    show_learning(weights);
+    show_learning(neuron_weights);
 
     // This is the meat and potatoes Perceptron training loop
     bool all_correct = false;
@@ -138,33 +142,30 @@ int main()
     {
         all_correct = true;
 
+        // take the randomized list vals in
         for (auto i : index_list)
         {
-            //     # take the randomized list vals in
-            //     for i in index_list:
-            //         forward_pass(x_train[i])
-            //         backward_pass(y_train[i])
-            //         adjust_weights(x_train[i])
+            forward_pass(x_train[i], neuron_y, neuron_weights);
+            // backward_pass(y_train[i])
+            // adjust_weights(x_train[i])
 
-            //         show_learning()
-            // TODO: get that rand working
-            // random.shuffle(index_list)
-
-            // take the randomized list vals in
+            show_learning(neuron_weights);
         }
+        // TODO: get that rand working
+        // random.shuffle(index_list)
 
-        for (auto i = 0; i < x_train.size(); i++)
-        {
-            //     for i in range(len(x_train)):
-            //         forward_pass(x_train[i])
-            //         print('x1 = ', '%4.1f' % x_train[i][1],
-            //               ', x2 = ', '%4.1f' % x_train[i][2],
-            //               ', y = ',  '%4.1f' % neuron_y[2])
+        // take the randomized list vals in
 
-            //         if(((y_train[i] < 0.5) and (neuron_y[2] >= 0.5))
-            //            or ((y_train[i] >= 0.5) and (neuron_y[2] < 0.5))):
-            //             all_correct = False
-        }
+        // for (auto i = 0; i < x_train.size(); i++)
+        // {
+        //         for
+        //             i in range(len(x_train)) : forward_pass(x_train[i])
+        //                                            print('x1 = ', '%4.1f' % x_train[i][1],
+        //                                                  ', x2 = ', '%4.1f' % x_train[i][2],
+        //                                                  ', y = ', '%4.1f' % neuron_y[2])
+
+        //                                                if (((y_train[i] < 0.5) and (neuron_y[2] >= 0.5)) or ((y_train[i] >= 0.5) and (neuron_y[2] < 0.5))) : all_correct = False
+        // }
     }
 
     // plt.show()
