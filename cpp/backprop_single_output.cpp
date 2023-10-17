@@ -7,7 +7,7 @@
 #include <numeric>
 #include <random>
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 // # Randomly initialize neuron weights from -1.0 to 1.0
 // # This also leaves the bias weight (at pos 0), as a zero
@@ -42,10 +42,8 @@ void show_learning(std::vector<std::vector<double>> weights)
 // # At the moment this is a two layer, three neuron network
 // # Layer one, the hidden layer, is two neurons.  Layer two is a single neuron output layer
 // def forward_pass(x):
-void forward_pass(std::vector<double> x, std::vector<double> neuron_y, std::vector<std::vector<double>> neuron_weights)
+std::vector<double> forward_pass(std::vector<double> x, std::vector<double> neuron_y, std::vector<std::vector<double>> neuron_weights)
 {
-    //     global neuron_y
-
     // dot product. refactor this ugliness
     std::vector<double> mult_intermediate(neuron_weights[0].size(), 0);
     std::transform(x.begin(), x.end(), neuron_weights[0].begin(), mult_intermediate.begin(), [](auto x, auto y)
@@ -53,7 +51,7 @@ void forward_pass(std::vector<double> x, std::vector<double> neuron_y, std::vect
     auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
                          { return (x + y); });
 
-    //     # first layer result is the tanh of our weights and input values
+    //  first layer result is the tanh of our weights and input values
     neuron_y[0] = std::tanh(z);
 
     // dot product. refactor this ugliness
@@ -78,24 +76,31 @@ void forward_pass(std::vector<double> x, std::vector<double> neuron_y, std::vect
                     { return (x + y); });
     // not sure if this is the right way to do this in c++
     neuron_y[2] = 1.0 / (1.0 + std::exp(-z));
+
+    return neuron_y;
 }
 
 // # now let's adjust our weights based on the error
 // def backward_pass(y_truth):
-//     global neuron_error
+std::vector<double> backward_pass(double y_truth, std::vector<double> neuron_y, std::vector<double> neuron_error, std::vector<std::vector<double>> neuron_weights)
+{
+    
+    // your loss function derivative, from the output layer
+    double error_prime = -(y_truth - neuron_y[2]);
 
-//     # your loss function derivative, from the output layer
-//     error_prime = -(y_truth - neuron_y[2])
-//     # and the logistic derivative. Remember, the derivatives build on each other through the layers
-//     derivative = neuron_y[2] * (1.0 - neuron_y[2])
-//     neuron_error[2] = error_prime * derivative
+    // and the logistic derivative. Remember, the derivatives build on each other through the layers
+    double derivative = neuron_y[2] * (1.0 - neuron_y[2]);
+    neuron_error[2] = error_prime * derivative;
 
-//     # tanh derivative, for the hidden layer
-//     derivative = 1.0 - neuron_y[0]**2
-//     neuron_error[0] = neuron_weights[2][1] * neuron_error[2] * derivative
+    // tanh derivative, for the hidden layer
+    derivative = 1.0 - pow(neuron_y[0],2);
+    neuron_error[0] = neuron_weights[2][1] * neuron_error[2] * derivative;
 
-//     derivative = 1.0 - neuron_y[1]**2
-//     neuron_error[1] = neuron_weights[2][2] * neuron_error[2] * derivative
+    derivative = 1.0 - pow(neuron_y[1],2);
+    neuron_error[1] = neuron_weights[2][2] * neuron_error[2] * derivative;
+
+    return neuron_error;
+}
 
 // def adjust_weights(x):
 //     global neuron_weights
@@ -145,8 +150,8 @@ int main()
         // take the randomized list vals in
         for (auto i : index_list)
         {
-            forward_pass(x_train[i], neuron_y, neuron_weights);
-            // backward_pass(y_train[i])
+            neuron_y = forward_pass(x_train[i], neuron_y, neuron_weights);
+            neuron_error = backward_pass(y_train[i], neuron_y, neuron_error, neuron_weights);
             // adjust_weights(x_train[i])
 
             show_learning(neuron_weights);
