@@ -84,7 +84,7 @@ std::vector<double> forward_pass(std::vector<double> x, std::vector<double> neur
 // def backward_pass(y_truth):
 std::vector<double> backward_pass(double y_truth, std::vector<double> neuron_y, std::vector<double> neuron_error, std::vector<std::vector<double>> neuron_weights)
 {
-    
+
     // your loss function derivative, from the output layer
     double error_prime = -(y_truth - neuron_y[2]);
 
@@ -93,23 +93,38 @@ std::vector<double> backward_pass(double y_truth, std::vector<double> neuron_y, 
     neuron_error[2] = error_prime * derivative;
 
     // tanh derivative, for the hidden layer
-    derivative = 1.0 - pow(neuron_y[0],2);
+    derivative = 1.0 - pow(neuron_y[0], 2);
     neuron_error[0] = neuron_weights[2][1] * neuron_error[2] * derivative;
 
-    derivative = 1.0 - pow(neuron_y[1],2);
+    derivative = 1.0 - pow(neuron_y[1], 2);
     neuron_error[1] = neuron_weights[2][2] * neuron_error[2] * derivative;
 
     return neuron_error;
 }
 
-// def adjust_weights(x):
-//     global neuron_weights
+std::vector<std::vector<double>> adjust_weights(std::vector<double> neuron_y, std::vector<double> neuron_error, std::vector<std::vector<double>> neuron_weights, float LEARNING_RATE, std::vector<double> &x_train)
+{
 
-//     neuron_weights[0] -= (x * LEARNING_RATE * neuron_error[0])
-//     neuron_weights[1] -= (x * LEARNING_RATE * neuron_error[1])
+    // what's the better way?
+    std::vector<double> intermediate_results(neuron_weights[0].size(), 0);
+    std::transform(x_train.begin(), x_train.end(), neuron_weights[0].begin(), intermediate_results.begin(), [&](auto x, auto y)
+                   { return y - (x * LEARNING_RATE * neuron_error[0]); });
 
-//     n2_inputs = np.array([1.0, neuron_y[0], neuron_y[1]])
-//     neuron_weights[2] -= (n2_inputs * LEARNING_RATE * neuron_error[2])
+    neuron_weights[0] = intermediate_results;
+
+    std::transform(x_train.begin(), x_train.end(), neuron_weights[1].begin(), intermediate_results.begin(), [&](auto x, auto y)
+                   { return y - (x * LEARNING_RATE * neuron_error[1]); });
+
+    neuron_weights[1] = intermediate_results;
+
+    std::vector<double> n2_inputs = {1.0, neuron_y[0], neuron_y[1]};
+    std::transform(n2_inputs.begin(), n2_inputs.end(), neuron_weights[2].begin(), intermediate_results.begin(), [&](auto x, auto y)
+                   { return y - (x * LEARNING_RATE * neuron_error[2]); });
+
+    neuron_weights[2] = intermediate_results;
+
+    return neuron_weights;
+}
 
 int main()
 {
@@ -121,7 +136,7 @@ int main()
 
     // random.seed(7)
     float LEARNING_RATE = 0.1;
-    std::vector<int> index_list = {0, 1, 2, 3}; // will be used to randomize order
+    std::vector<int> index_list = {0, 1, 2, 3}; // will be used to randomize order of x_train
 
     // training examples.Ultimately, like the hyperparams, these should be passed in.
     // here we include in code as we write it
@@ -152,7 +167,7 @@ int main()
         {
             neuron_y = forward_pass(x_train[i], neuron_y, neuron_weights);
             neuron_error = backward_pass(y_train[i], neuron_y, neuron_error, neuron_weights);
-            // adjust_weights(x_train[i])
+            neuron_weights = adjust_weights(neuron_y, neuron_error, neuron_weights, LEARNING_RATE, x_train[i]);
 
             show_learning(neuron_weights);
         }
