@@ -129,12 +129,7 @@ std::vector<std::vector<double>> adjust_weights(std::vector<double> neuron_y, st
 int main()
 {
     // # define our hyperparams
-    // std::random_device rd;
-    // std::mt19937 mt(rd());
-    // std::uniform_distribution<int> dist(0, 6);
-    // then we use dist(mt) to get our number
 
-    // random.seed(7)
     float LEARNING_RATE = 0.1;
     std::vector<int> index_list = {0, 1, 2, 3}; // will be used to randomize order of x_train
 
@@ -162,7 +157,12 @@ int main()
     {
         all_correct = true;
 
-        // take the randomized list vals in
+        // randomize the order of the training data intake
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(index_list.begin(), index_list.end(), g);
+
+        // Here we're learning from our training data
         for (auto i : index_list)
         {
             neuron_y = forward_pass(x_train[i], neuron_y, neuron_weights);
@@ -171,21 +171,25 @@ int main()
 
             show_learning(neuron_weights);
         }
-        // TODO: get that rand working
-        // random.shuffle(index_list)
 
-        // take the randomized list vals in
+        // let's shuffle again, for good measure
+        // std::shuffle(index_list.begin(), index_list.end(), g);
 
-        // for (auto i = 0; i < x_train.size(); i++)
-        // {
-        //         for
-        //             i in range(len(x_train)) : forward_pass(x_train[i])
-        //                                            print('x1 = ', '%4.1f' % x_train[i][1],
-        //                                                  ', x2 = ', '%4.1f' % x_train[i][2],
-        //                                                  ', y = ', '%4.1f' % neuron_y[2])
+        // now we're going to actually check if our weights are converging on
+        // where they're needed to predict
+        for (auto i = 0; i < x_train.size(); i++)
+        {
+            neuron_y = forward_pass(x_train[i], neuron_y, neuron_weights);
+            std::cout << "x1 = " << x_train[i][1];
+            std::cout << ", x2 = " << x_train[i][2];
+            std::cout << ", y = " << neuron_y[2] << std::endl;
 
-        //                                                if (((y_train[i] < 0.5) and (neuron_y[2] >= 0.5)) or ((y_train[i] >= 0.5) and (neuron_y[2] < 0.5))) : all_correct = False
-        // }
+            // if our y train is opposite our prediction, we need to run the training again.
+            if (((y_train[i] < 0.5) && (neuron_y[2] >= 0.5)) || ((y_train[i] >= 0.5) && (neuron_y[2] < 0.5)))
+            {
+                all_correct = false;
+            }
+        }
     }
 
     // plt.show()
