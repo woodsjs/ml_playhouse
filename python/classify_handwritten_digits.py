@@ -167,3 +167,14 @@ def backward_pass(y_truth):
         weighted_error = np.dot(error_weight_array, output_layer_error)
         hidden_layer_error[i] = weighted_error * derivative
 
+def adjust_weights(x):
+    global output_layer_w
+    global hidden_layer_w
+
+    for i, error in enumerate(hidden_layer_error):
+        hidden_layer_w[i] -= (x * LEARNING_RATE * error) # updating our weights
+    
+    hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
+
+    for i, error in enumerate(output_layer_error):
+        output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error) 
