@@ -128,12 +128,15 @@ def forward_pass(x):
     global hidden_layer_y
     global output_layer_y
 
+    # Let each neuron in the hidden layer look at every image
     for i, w in enumerate(hidden_layer_w):
         z = np.dot(w, x)
         hidden_layer_y[i] = np.tanh(z)
 
+    # add in our bias term!
     hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
 
+    # show the output of each hidden layer, to each input of the output layer
     for i, w in enumerate(output_layer_w):
         z = np.dot(w, hidden_output_array)
         output_layer_y[i] = 1.0 / (1.0 + np.exp(-z))
@@ -144,6 +147,7 @@ def backward_pass(y_truth):
     global output_layer_error
 
     # backproping error
+    # starting backwards, compute derivative of loss function for each output neuron
     for i, y in enumerate(output_layer_y):
         error_prime = -(y_truth[i] - y)  # loss derivative
         derivative = y * (1.0 - y)  # logistic derivative
