@@ -192,7 +192,7 @@ for i in range(EPOCHS):
     # below doesn't give a good feel as to what's going on for a programmer
     for j in index_list:
         # add bias
-        x = np.concatenate((np.array(1.0), x_train[j]))
+        x = np.concatenate((np.array([1.0]), x_train[j]))
 
         forward_pass(x)
 
@@ -205,7 +205,7 @@ for i in range(EPOCHS):
 
     correct_test_results = 0
     for j in range(len(x_test)):
-        x = np.concatenate((np.array[1.0]), x_test[j])
+        x = np.concatenate((np.array([1.0]), x_test[j]))
 
         forward_pass(x)
 
