@@ -182,3 +182,37 @@ def adjust_weights(x):
 
     for i, error in enumerate(output_layer_error):
         output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error) 
+
+# training loop
+for i in range(EPOCHS):
+    np.random.shuffle(index_list)
+    correct_training_results = 0
+
+    # don't really like that we're using global vars 
+    # below doesn't give a good feel as to what's going on for a programmer
+    for j in index_list:
+        # add bias
+        x = np.concatenate((np.array(1.0), x_train[j]))
+
+        forward_pass(x)
+
+        if output_layer_y.argmax() == y_train[j].argmax():
+            correct_training_results += 1
+        
+        backward_pass(y_train[j])
+
+        adjust_weights(x)
+
+    correct_test_results = 0
+    for j in range(len(x_test)):
+        x = np.concatenate((np.array[1.0]), x_test[j])
+
+        forward_pass(x)
+
+        if output_layer_y.argmax() == y_test[j].argmax():
+            correct_test_results += 1
+
+    show_learning(i, correct_training_results/len(x_train),
+                  correct_test_results/len(x_test))
+    
+plot_learning()
