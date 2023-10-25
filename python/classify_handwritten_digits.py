@@ -137,3 +137,33 @@ def forward_pass(x):
     for i, w in enumerate(output_layer_w):
         z = np.dot(w, hidden_output_array)
         output_layer_y[i] = 1.0 / (1.0 + np.exp(-z))
+
+
+def backward_pass(y_truth):
+    global hidden_layer_error
+    global output_layer_error
+
+    # backproping error
+    for i, y in enumerate(output_layer_y):
+        error_prime = -(y_truth[i] - y)  # loss derivative
+        derivative = y * (1.0 - y)  # logistic derivative
+
+        output_layer_error[i] = error_prime * derivative
+
+    # output_layer_w is a 2d array, 10 rows (one for each neuron), 25 columns (one for each output of hidden y)
+    # hidden_layer_Y is a 1d array with 25 values
+    for i, y in enumerate(hidden_layer_y):
+        error_weights = []
+
+        # here we are adding each row of the output layer weights to the error_weights var
+
+        for w in output_layer_w:
+            error_weights.append(w[i + 1])
+
+        error_weight_array = np.array(error_weights)
+
+        # time to backprop the error
+        derivative = 1.0 - y**2  # tanh derivative
+        weighted_error = np.dot(error_weight_array, output_layer_error)
+        hidden_layer_error[i] = weighted_error * derivative
+
