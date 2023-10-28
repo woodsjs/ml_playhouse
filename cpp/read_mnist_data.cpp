@@ -3,6 +3,7 @@
 // #include "idx2.hpp"
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -56,8 +57,20 @@ private:
     std::string LABEL_FILENAME = "../data/mnist/train-labels.idx1-ubyte";
 
 public:
-    void read_images_labels()
+    void read_images_labels() {
+        read_images_labels("", "");
+    }
+
+    void read_images_labels(std::string input_image_filename, std::string input_label_filename)
     {
+
+        if ( !input_image_filename.empty()) {
+            this->IMAGE_FILENAME = input_image_filename;
+        }
+
+        if ( !input_label_filename.empty()) {
+            this->LABEL_FILENAME = input_label_filename;
+        }
 
         // read from the labels file
         std::ifstream labels_file{LABEL_FILENAME, labels_file.binary | labels_file.in};
