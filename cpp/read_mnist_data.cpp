@@ -57,18 +57,21 @@ private:
     std::string LABEL_FILENAME = "../data/mnist/train-labels.idx1-ubyte";
 
 public:
-    void read_images_labels() {
+    void read_images_labels()
+    {
         read_images_labels("", "");
     }
 
     void read_images_labels(std::string input_image_filename, std::string input_label_filename)
     {
 
-        if ( !input_image_filename.empty()) {
+        if (!input_image_filename.empty())
+        {
             this->IMAGE_FILENAME = input_image_filename;
         }
 
-        if ( !input_label_filename.empty()) {
+        if (!input_label_filename.empty())
+        {
             this->LABEL_FILENAME = input_label_filename;
         }
 
@@ -86,6 +89,7 @@ public:
         labels_file.read(reinterpret_cast<char *>(&magic_number), sizeof magic_number);
 
         // include gcc endian conversion with builtin_bswap32, since this is big endian
+        // we should just do this from the get go, once
         // std::cout << "First 8 bytes of file " << __builtin_bswap32(magic_number) << std::endl;
         if (__builtin_bswap32(magic_number) != 2049)
         {
@@ -104,22 +108,65 @@ public:
 
         labels_file.close();
 
-        // std::fstream image_file{IMAGE_FILENAME, image_file.binary | image_file.in};
-
-        // open the file in read mode
-        // image_file.open(IMAGE_FILENAME, image_file.binary | image_file.in);
-
-        // if (!image_file.is_open())
-        // {
-        //     std::cout << "Failed to open " << IMAGE_FILENAME << std::endl;
-        //     return {{NULL}, {NULL}};
-        // }
-
         // read from the images file
-        //         with open(images_filepath, 'rb') as file:
-        //             magic, size, rows, cols = struct.unpack(">IIII", file.read(16))
-        //             if magic != 2051:
-        //                 raise ValueError('Magic number mismatch, expected 2051, got {}'.format(magic))
+        std::ifstream images_file{IMAGE_FILENAME, images_file.binary | images_file.in};
+        if (!images_file.is_open())
+        {
+            std::cout << "Failed to open " << IMAGE_FILENAME << std::endl;
+            return;
+        }
+
+        // our magic number, 4 bytes.
+        int32_t images_magic_number;
+
+        // reinterpret_cast is compile time, and can convert between pointer types.
+        images_file.read(reinterpret_cast<char *>(&images_magic_number), sizeof images_magic_number);
+
+        // check the first two bytes of the magic number, should always be 00
+        if ((images_magic_number & 0x0000ffff) != 0)
+        {
+            std::cout << "Incorrect bytes in magic number for images file. Should be 0, but is " << (images_magic_number & 0xffff) << std::endl;
+        }
+
+        // include gcc endian conversion with builtin_bswap32, since this is big endian
+        // std::cout << "First " << sizeof(images_magic_number) << " bytes of file " << __builtin_bswap32(images_magic_number) << std::endl;
+        if (__builtin_bswap32(images_magic_number) != 2051)
+        {
+            std::cout << "Magic number mismatch. Expected 2051, but got " << __builtin_bswap32(images_magic_number) << std::endl;
+            return;
+        }
+
+        // third byte is the data type. We really need to get this...
+        std::cout << "Datatype " << (__builtin_bswap32(images_magic_number) & 0x0000ff00) << std::endl;
+
+        // fourth byte is the number of dimensions
+        // we can make the rest of below more generic by using this to get the sizes of each dimension
+        std::cout << "Number of dimensions " << (__builtin_bswap32(images_magic_number) & 0x000000ff) << std::endl;
+
+        // now let's get the row/col data
+        uint32_t images_rows;
+        images_file.read(reinterpret_cast<char *>(&images_rows), sizeof images_rows);
+        std::cout << "Number of rows " << __builtin_bswap32(images_rows) << std::endl;
+
+        uint32_t images_cols;
+        images_file.read(reinterpret_cast<char *>(&images_cols), sizeof images_cols);
+        std::cout << "Number of columns " << __builtin_bswap32(images_cols) << std::endl;
+
+        uint32_t images_depth;
+        images_file.read(reinterpret_cast<char *>(&images_depth), sizeof images_depth);
+        std::cout << "Depth of data " << __builtin_bswap32(images_depth) << std::endl;
+
+        auto images_full_data_size = images_rows * images_cols * images_depth;
+
+        // to hold our images, which are stored in 2 bytes
+        std::vector<uint16_t> images = {};
+        uint16_t image;
+
+        while (images_file.get(reinterpret_cast<char *>(&image), sizeof image))
+        {
+            labels.push_back(label);
+        }
+
         //             image_data = array("B", file.read())
         //         images = []
         //         for i in range(size):
@@ -128,6 +175,8 @@ public:
         //             img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
         //             img = img.reshape(28, 28)
         //             images[i][:] = img
+
+        labels_file.close();
 
         //         return images, labels
     }
