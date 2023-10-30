@@ -159,13 +159,13 @@ public:
         auto images_full_data_size = images_rows * images_cols * images_depth;
 
         // to hold our images, which are stored in 2 bytes
-        std::vector<uint16_t> images = {};
-        uint16_t image;
+        // std::vector<uint16_t> images = {};
+        // uint16_t image;
 
-        while (images_file.get(reinterpret_cast<char *>(&image), sizeof image))
-        {
-            labels.push_back(label);
-        }
+        // while (images_file.get(reinterpret_cast<char *>(&image), sizeof image))
+        // {
+        //     labels.push_back(label);
+        // }
 
         //             image_data = array("B", file.read())
         //         images = []
