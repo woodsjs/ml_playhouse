@@ -26,20 +26,26 @@ void read_mnist(std::string input_image_filename, std::string input_label_filena
     mnistDL.read_images_labels(input_image_filename, input_label_filename, labels, images);
 }
 
-// index_list = list(range(len(x_train)))
-
 // # Randomly initialize neuron weights from -1.0 to 1.0
 // # This also leaves the bias weight (at pos 0), as a zero
 // # We want to randomly intitialize to break up the symmetry. If the
 // # weights are all the same number, they would all get the same adjustment during backprop.
-// def layer_w(neuron_count, input_count):
-//     weights = np.zeros((neuron_count, input_count + 1))
+std::vector<std::vector<double>> init_neuron_weights(int neuron_count, int input_count)
+{
+    // we increase the input count by one, so we can have the first value our bias of zero
+    std::vector<std::vector<double>> weights(neuron_count, std::vector<double>(input_count + 1));
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_real_distribution<double> distDoub(-1.0, 1.0); // distribution in range [-1.0, 1.0];
 
-//     for i in range(neuron_count):
-//         for j in range(1, (input_count + 1)):
-//             weights[i][j] = np.random.uniform(-1.0, 1.0)
+    for (auto i = 0; i < neuron_count; i++)
+    {
+        for (auto j = 1; j < input_count; j++ )
+            weights[i][j] = distDoub(rng); // needs to be some rando thing
+    }
 
-//     return weights
+    return weights;
+}
 
 // # 25 neurons, 784 inputs for our hidden layer
 // hidden_layer_w = layer_w(25, 784)
@@ -196,6 +202,12 @@ int main(void)
 
     read_mnist(TRAIN_IMAGE_FILENAME, TRAIN_LABEL_FILENAME, y_train, x_train);
     read_mnist(TEST_IMAGE_FILENAME, TEST_LABEL_FILENAME, y_test, x_test);
+
+    // index_list = list(range(len(x_train)))
+
+    // get our weights
+    std::vector<std::vector<double>> neuron_weights;
+    neuron_weights = init_neuron_weights(3, 24);
 
     return 0;
 }
