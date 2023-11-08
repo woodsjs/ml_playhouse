@@ -40,50 +40,29 @@ std::vector<std::vector<double>> init_neuron_weights(int neuron_count, int input
 
     for (auto i = 0; i < neuron_count; i++)
     {
-        for (auto j = 1; j < input_count; j++ )
+        for (auto j = 1; j < input_count; j++)
             weights[i][j] = distDoub(rng); // needs to be some rando thing
     }
 
     return weights;
 }
 
-// # 25 neurons, 784 inputs for our hidden layer
-// hidden_layer_w = layer_w(25, 784)
-// # 25 neurons, 25 outputs
-// hidden_layer_y = np.zeros(25)
-// # also, 25 neurons, 25 error values
-// hidden_layer_error = np.zeros(25)
+// text representation of learning during one epoch
+// we store the data in global vars to use later
+void show_learning(int epoch_number, double train_acc, double test_acc)
+{
+    // global chart_x
+    // global chart_y_train
+    // global chart_y_test
 
-// # the hidden layer has 25 outputs, so the output layer has 25 inputs
-// # it has 10 outputs, since we're determining values 0-9
-// output_layer_w = layer_w(10, 25)
-// output_layer_y = np.zeros(10)
-// output_layer_error = np.zeros(10)
+    std::cout << "Epoch no: " << epoch_number << " ";
+    std::cout << ", train_acc: " << train_acc << " ";
+    std::cout << ", test_acc " << test_acc << " ";
 
-// # here we're going to show our learning
-// chart_x = []
-// chart_y_train = []
-// chart_y_test = []
-
-// # text representation of learning during one epoch
-// # we store the data in global vars to use later
-// def show_learning(epoch_no, train_acc, test_acc):
-//     global chart_x
-//     global chart_y_train
-//     global chart_y_test
-
-//     print(
-//         "epoch no: ",
-//         epoch_no,
-//         ", train_acc: ",
-//         "%6.4f" % train_acc,
-//         ", test_acc: ",
-//         "%6.4f" % test_acc,
-//     )
-
-//     chart_x.append(epoch_no + 1)
-//     chart_y_train.append(1.0 - train_acc)
-//     chart_y_test.append(1.0 - test_acc)
+    // chart_x.append(epoch_no + 1)
+    // chart_y_train.append(1.0 - train_acc)
+    // chart_y_test.append(1.0 - test_acc)}
+}
 
 // def plot_learning():
 //     plt.plot(chart_x, chart_y_train, "r-", label="training error")
@@ -98,22 +77,49 @@ std::vector<std::vector<double>> init_neuron_weights(int neuron_count, int input
 
 //     plt.show()
 
-// def forward_pass(x):
-//     global hidden_layer_y
-//     global output_layer_y
+void forward_pass(std::vector<std::vector<uint8_t>> x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
+{
 
-//     # Let each neuron in the hidden layer look at every image
-//     for i, w in enumerate(hidden_layer_w):
-//         z = np.dot(w, x)
-//         hidden_layer_y[i] = np.tanh(z)
+    // Let each neuron in the hidden layer look at every image
 
-//     # add in our bias term!
-//     hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
+    for (std::vector<double> neuron_weights : hidden_layer_weights)
+    {
+        std::vector<double> mult_intermediate(neuron_weights.size(), 0.0);
 
-//     # show the output of each hidden layer, to each input of the output layer
-//     for i, w in enumerate(output_layer_w):
-//         z = np.dot(w, hidden_output_array)
-//         output_layer_y[i] = 1.0 / (1.0 + np.exp(-z))
+        for (auto i = 0; i <= hidden_layer_y.size(); i++)
+        {
+            std::transform(x[i].begin(), x[i].end(), neuron_weights.begin(), mult_intermediate.begin(), [](auto x, auto y)
+                           { return x * y; });
+            auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+                                 { return (x + y); });
+            hidden_layer_y[i] = std::tanh(z); // tanh of z
+        }
+    }
+
+    // add in our bias term!
+    // hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
+    std::vector<std::vector<double>> hidden_output_array;
+
+    for (double hidden_y_value : hidden_layer_y)
+    {
+        hidden_output_array.push_back({1.0, hidden_y_value});
+    }
+
+    // show the output of each hidden layer, to each input of the output layer
+    for (std::vector<double> neuron_weights : output_layer_weights)
+    {
+        std::vector<double> mult_intermediate(neuron_weights.size(), 0.0);
+
+        for (auto i = 0; i <= output_layer_y.size(); i++)
+        {
+            std::transform(hidden_output_array[i].begin(), hidden_output_array[i].end(), neuron_weights.begin(), mult_intermediate.begin(), [](auto x, auto y)
+                           { return x * y; });
+            auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+                                 { return (x + y); });
+            output_layer_y[i] =  1.0 / (1.0 + exp(-z));
+        }
+    }
+}
 
 // def backward_pass(y_truth):
 //     global hidden_layer_error
@@ -192,6 +198,10 @@ std::vector<std::vector<double>> init_neuron_weights(int neuron_count, int input
 
 int main(void)
 {
+    auto hidden_neuron_count = 25;
+    auto hidden_layer_inputs = 725;
+
+    auto output_neuron_count = 10;
 
     // our mnist reader will push out our labels (y_train, y_test), as well as our images (x_train, x_test)
     std::vector<uint16_t> y_train;
@@ -206,8 +216,42 @@ int main(void)
     // index_list = list(range(len(x_train)))
 
     // get our weights
-    std::vector<std::vector<double>> neuron_weights;
-    neuron_weights = init_neuron_weights(3, 24);
+    // std::vector<std::vector<double>> neuron_weights;
+    // neuron_weights = init_neuron_weights(3, 24);
+
+    // # 25 neurons, 784 inputs for our hidden layer
+    std::vector<std::vector<double>> hidden_layer_weights = init_neuron_weights(hidden_neuron_count, hidden_layer_inputs);
+    // 25neurons gives us 25 outputs, init to zero
+    std::vector<double> hidden_layer_y(hidden_neuron_count, 0);
+    // also, 25 neurons, 25 error values, init to zero
+    std::vector<double> hidden_layer_error(hidden_neuron_count, 0);
+
+    // the hidden layer has 25 outputs, so the output layer has 25 inputs
+    // it has 10 outputs, since we're determining values 0-9
+    std::vector<std::vector<double>> output_layer_weights = init_neuron_weights(output_neuron_count, hidden_neuron_count);
+    std::vector<double> output_layer_y(output_neuron_count, 0);
+    std::vector<double> output_layer_error(output_neuron_count, 0);
+
+    // # here we're going to show our learning
+    // chart_x = []
+    // chart_y_train = []
+    // chart_y_test = []
+
+    std::cout << "Going in "
+              << "---------------------------" << std::endl;
+    std::cout << "Hidden layer y is " << hidden_layer_y[1] << std::endl;
+    std::cout << "Output layer y is " << output_layer_y[1] << std::endl;
+    std::cout << "Hidden layer weights are " << hidden_layer_weights[1][1] << std::endl;
+    std::cout << "xtrain is " << x_train[1][1][1] << std::endl;
+
+    forward_pass(x_train[1], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+
+    std::cout << "Coming out "
+              << "---------------------------" << std::endl;
+    std::cout << "Hidden layer y is " << hidden_layer_y[1] << std::endl;
+    std::cout << "Output layer y is " << output_layer_y[1] << std::endl;
+    std::cout << "Hidden layer weights are " << hidden_layer_weights[1][1] << std::endl;
+    std::cout << "xtrain is " << x_train[1][1][1] << std::endl;
 
     return 0;
 }
