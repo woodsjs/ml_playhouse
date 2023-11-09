@@ -116,39 +116,54 @@ void forward_pass(std::vector<std::vector<uint8_t>> x, std::vector<double> &hidd
                            { return x * y; });
             auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
                                  { return (x + y); });
-            output_layer_y[i] =  1.0 / (1.0 + exp(-z));
+            output_layer_y[i] = 1.0 / (1.0 + exp(-z));
         }
     }
 }
 
-// def backward_pass(y_truth):
-//     global hidden_layer_error
-//     global output_layer_error
+void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<double> &output_layer_y, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
+{
 
-//     # backproping error
-//     # starting backwards, compute derivative of loss function for each output neuron
-//     for i, y in enumerate(output_layer_y):
-//         error_prime = -(y_truth[i] - y)  # loss derivative
-//         derivative = y * (1.0 - y)  # logistic derivative
+    //     # backproping error
+    //     # starting backwards, compute derivative of loss function for each output neuron
+    for (auto i = 0; i < output_layer_y.size(); i++)
+    {
+        double error_prime = -(y_truth[i] - output_layer_y[i]);            // loss derivative
+        double derivative = output_layer_y[i] * (1.0 - output_layer_y[i]); // logistic derivative
 
-//         output_layer_error[i] = error_prime * derivative
+        output_layer_error[i] = error_prime * derivative;
+    }
 
-//     # output_layer_w is a 2d array, 10 rows (one for each neuron), 25 columns (one for each output of hidden y)
-//     # hidden_layer_Y is a 1d array with 25 values
-//     for i, y in enumerate(hidden_layer_y):
-//         error_weights = []
+    //  output_layer_weights is a 2d array, 10 rows (one for each neuron), 25 columns (one for each output of hidden y)
+    //  hidden_layer_Y is a 1d array with 25 values
+    for (auto i = 0; i < hidden_layer_y.size(); i++)
+    {
+        std::vector<double> error_weights;
 
-//         # here we are adding each row of the output layer weights to the error_weights var
+        // here we are adding each row of the output layer weights to the error_weights var
+        for (std::vector<double> weights : output_layer_weights)
+        {
+            error_weights.push_back(weights[i + 1]);
+        }
 
-//         for w in output_layer_w:
-//             error_weights.append(w[i + 1])
+        // error_weight_array = np.array(error_weights)
 
-//         error_weight_array = np.array(error_weights)
+        // time to backprop the error
+        double derivative = 1.0 - pow(hidden_layer_y[i], 2); // tanh dervative
+        double weighted_error;
+        std::vector<double> mult_intermediate(error_weights.size(), 0.0);
 
-//         # time to backprop the error
-//         derivative = 1.0 - y**2  # tanh derivative
-//         weighted_error = np.dot(error_weight_array, output_layer_error)
-//         hidden_layer_error[i] = weighted_error * derivative
+        for (auto i = 0; i <= error_weights.size(); i++)
+        {
+            std::transform(error_weights.begin(), error_weights.end(), output_layer_error.begin(), mult_intermediate.begin(), [](auto x, auto y)
+                           { return x * y; });
+            weighted_error = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+                                         { return (x + y); });
+        }
+
+        hidden_layer_error[i] = weighted_error * derivative;
+    }
+}
 
 // def adjust_weights(x):
 //     global output_layer_w
@@ -237,21 +252,8 @@ int main(void)
     // chart_y_train = []
     // chart_y_test = []
 
-    std::cout << "Going in "
-              << "---------------------------" << std::endl;
-    std::cout << "Hidden layer y is " << hidden_layer_y[1] << std::endl;
-    std::cout << "Output layer y is " << output_layer_y[1] << std::endl;
-    std::cout << "Hidden layer weights are " << hidden_layer_weights[1][1] << std::endl;
-    std::cout << "xtrain is " << x_train[1][1][1] << std::endl;
-
     forward_pass(x_train[1], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
-
-    std::cout << "Coming out "
-              << "---------------------------" << std::endl;
-    std::cout << "Hidden layer y is " << hidden_layer_y[1] << std::endl;
-    std::cout << "Output layer y is " << output_layer_y[1] << std::endl;
-    std::cout << "Hidden layer weights are " << hidden_layer_weights[1][1] << std::endl;
-    std::cout << "xtrain is " << x_train[1][1][1] << std::endl;
+    backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
 
     return 0;
 }
