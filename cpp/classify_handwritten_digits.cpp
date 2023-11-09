@@ -77,7 +77,7 @@ void show_learning(int epoch_number, double train_acc, double test_acc)
 
 //     plt.show()
 
-void forward_pass(std::vector<std::vector<uint8_t>> x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
+void forward_pass(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
 {
 
     // Let each neuron in the hidden layer look at every image
@@ -153,7 +153,7 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
         double weighted_error;
         std::vector<double> mult_intermediate(error_weights.size(), 0.0);
 
-        for (auto i = 0; i <= error_weights.size(); i++)
+        for (auto j = 0; j <= error_weights.size(); j++)
         {
             std::transform(error_weights.begin(), error_weights.end(), output_layer_error.begin(), mult_intermediate.begin(), [](auto x, auto y)
                            { return x * y; });
