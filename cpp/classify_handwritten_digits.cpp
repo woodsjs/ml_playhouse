@@ -10,8 +10,8 @@
 #include <cmath>
 
 // np.random.seed(7)
-float LEARNING_RATE = 0.01;
-int EPOCHS = 20;
+const float LEARNING_RATE = 0.01;
+const int EPOCHS = 2;
 
 // # Where dez images
 std::string TRAIN_IMAGE_FILENAME = "../data/mnist/train-images.idx3-ubyte";
@@ -97,9 +97,7 @@ void forward_pass(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hid
     }
 
     // add in our bias term!
-    // hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
     std::vector<std::vector<double>> hidden_output_array;
-
     for (double hidden_y_value : hidden_layer_y)
     {
         hidden_output_array.push_back({1.0, hidden_y_value});
@@ -166,50 +164,41 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
 }
 
 // def adjust_weights(x):
-//     global output_layer_w
-//     global hidden_layer_w
+void adjust_weights(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
+{
+    // for i, error in enumerate(hidden_layer_error):
+    //     hidden_layer_w[i] -= (x * LEARNING_RATE * error) # updating our weights
 
-//     for i, error in enumerate(hidden_layer_error):
-//         hidden_layer_w[i] -= (x * LEARNING_RATE * error) # updating our weights
+    double local_learning_rate = LEARNING_RATE;
 
-//     hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
+    // this actually probably has to be in a for loop
+    for (auto i = 0; i < hidden_layer_error.size(); i++)
+    {
+        // std::vector<double> intermediate_results(hidden_layer_weights.size(), 0);
+        // std::transform(x[i].begin(), x[i].end(), hidden_layer_weights[i].begin(), intermediate_results.begin(), [&](auto x, auto y)
+        //                { return y - (x * LEARNING_RATE * hidden_layer_error); });
+        std::vector<double> layer_weights = hidden_layer_weights[i];
+        std::transform(x[i].begin(), x[i].end(), layer_weights.begin(), hidden_layer_weights[i].begin(), [=](auto x, auto y)
+                       { return y - (x * local_learning_rate * hidden_layer_error[i]); });
+    }
 
-//     for i, error in enumerate(output_layer_error):
-//         output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error)
+    // add in our bias term!
+    // hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
+    std::vector<std::vector<double>> hidden_output_array;
+    for (double hidden_y_value : hidden_layer_y)
+    {
+        hidden_output_array.push_back({1.0, hidden_y_value});
+    }
 
-// # training loop
-// for i in range(EPOCHS):
-//     np.random.shuffle(index_list)
-//     correct_training_results = 0
-
-//     # don't really like that we're using global vars
-//     # below doesn't give a good feel as to what's going on for a programmer
-//     for j in index_list:
-//         # add bias
-//         x = np.concatenate((np.array([1.0]), x_train[j]))
-
-//         forward_pass(x)
-
-//         if output_layer_y.argmax() == y_train[j].argmax():
-//             correct_training_results += 1
-
-//         backward_pass(y_train[j])
-
-//         adjust_weights(x)
-
-//     correct_test_results = 0
-//     for j in range(len(x_test)):
-//         x = np.concatenate((np.array([1.0]), x_test[j]))
-
-//         forward_pass(x)
-
-//         if output_layer_y.argmax() == y_test[j].argmax():
-//             correct_test_results += 1
-
-//     show_learning(i, correct_training_results/len(x_train),
-//                   correct_test_results/len(x_test))
-
-// plot_learning()
+    // for i, error in enumerate(output_layer_error):
+    //     output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error)
+    for (auto i = 0; i < output_layer_error.size(); i++)
+    {
+        std::vector<double> layer_weights = output_layer_weights[i];
+        std::transform(hidden_output_array[i].begin(), hidden_output_array[i].end(), layer_weights.begin(), output_layer_weights[i].begin(), [=](auto x, auto y)
+                       { return y - (x * local_learning_rate * output_layer_error[i]); });
+    }
+}
 
 int main(void)
 {
@@ -229,6 +218,7 @@ int main(void)
     read_mnist(TEST_IMAGE_FILENAME, TEST_LABEL_FILENAME, y_test, x_test);
 
     // index_list = list(range(len(x_train)))
+    // std::vector<int> index_list =
 
     // get our weights
     // std::vector<std::vector<double>> neuron_weights;
@@ -252,8 +242,62 @@ int main(void)
     // chart_y_train = []
     // chart_y_test = []
 
-    forward_pass(x_train[1], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
-    backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
+    // # training loop
+    for (auto i = 0; i < EPOCHS; i++)
+    {
+        std::cout << "Epoch " << i << std::endl;
 
-    return 0;
+        // np.random.shuffle(index_list)
+        auto correct_training_results = 0;
+
+        // # don't really like that we're using global vars
+        // # below doesn't give a good feel as to what's going on for a programmer
+        std::cout << "Training set size " << x_train.size() << std::endl;
+        for (auto j = 0; j < x_train.size(); j++)
+        {
+            if ( j % 1000 == 0 ) {
+                std::cout << " " << j << " ";
+            } else if ( j % 500 == 0 ) {
+                std::cout << "*";
+            }
+
+            forward_pass(x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+
+            //      if output_layer_y.argmax() == y_train[j].argmax():
+            //          correct_training_results += 1
+
+            std::vector<double>::iterator result;
+            result = std::max_element(output_layer_y.begin(), output_layer_y.end());
+            int max_y = std::distance(output_layer_y.begin(), result);
+
+            if (max_y == y_train[j])
+            {
+                correct_training_results += 1;
+            }
+
+            // backward_pass(y_train[j], hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
+            backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
+
+            //          adjust_weights(x)
+        }
+        std::cout << std::endl;
+        auto correct_test_results = 0;
+        for (auto k = 0; k < x_test.size(); k++)
+        {
+            //      x = np.concatenate((np.array([1.0]), x_test[j]))
+
+            //      forward_pass(x)
+            forward_pass(x_train[1], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+
+            //      if output_layer_y.argmax() == y_test[j].argmax():
+            //          correct_test_results += 1
+        }
+
+        //  show_learning(i, correct_training_results/len(x_train),
+        //                   correct_test_results/len(x_test))
+
+        // plot_learning()
+    }
+
+    return EXIT_SUCCESS;
 }
