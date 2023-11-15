@@ -11,7 +11,7 @@
 
 // np.random.seed(7)
 const float LEARNING_RATE = 0.01;
-const int EPOCHS = 2;
+const int EPOCHS = 10;
 
 // # Where dez images
 std::string TRAIN_IMAGE_FILENAME = "../data/mnist/train-images.idx3-ubyte";
@@ -255,16 +255,16 @@ int main(void)
         std::cout << "Training set size " << x_train.size() << std::endl;
         for (auto j = 0; j < x_train.size(); j++)
         {
-            if ( j % 1000 == 0 ) {
+            if (j % 10000 == 0)
+            {
                 std::cout << " " << j << " ";
-            } else if ( j % 500 == 0 ) {
+            }
+            else if (j % 1000 == 0)
+            {
                 std::cout << "*";
             }
 
             forward_pass(x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
-
-            //      if output_layer_y.argmax() == y_train[j].argmax():
-            //          correct_training_results += 1
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -278,6 +278,7 @@ int main(void)
             // backward_pass(y_train[j], hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
             backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
 
+            adjust_weights(x_train[j], hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
             //          adjust_weights(x)
         }
         std::cout << std::endl;
@@ -287,14 +288,26 @@ int main(void)
             //      x = np.concatenate((np.array([1.0]), x_test[j]))
 
             //      forward_pass(x)
-            forward_pass(x_train[1], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            forward_pass(x_train[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             //      if output_layer_y.argmax() == y_test[j].argmax():
             //          correct_test_results += 1
+            std::vector<double>::iterator result;
+            result = std::max_element(output_layer_y.begin(), output_layer_y.end());
+            int max_y = std::distance(output_layer_y.begin(), result);
+
+            if (max_y == y_test[k])
+            {
+                correct_test_results += 1;
+            }
         }
 
-        //  show_learning(i, correct_training_results/len(x_train),
-        //                   correct_test_results/len(x_test))
+        std::cout << "Xtrain size " << x_train.size() << std::endl;
+        double training_accuracy = static_cast<double>( correct_training_results) / static_cast<double>( x_train.size());
+        double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(x_test.size());
+
+        show_learning(i, training_accuracy, testing_accuracy);
+        std::cout << std::endl;
 
         // plot_learning()
     }
