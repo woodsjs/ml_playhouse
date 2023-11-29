@@ -84,10 +84,21 @@ void forward_pass(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_y, 
 {
 
     // we need to unroll x
+//    for (auto i = 0; i < hidden_layer_weights.size(); i++)
+//    {
+//        double z = std::inner_product(x.begin(), x.end(), hidden_layer_weights[i].begin(), 0.0);
+//        hidden_layer_y[i] = std::tanh(z);
+//    }
+
     for (auto i = 0; i < hidden_layer_weights.size(); i++)
     {
-        auto z = std::inner_product(x.begin(), x.end(), hidden_layer_weights[i].begin(), 0.0);
-        hidden_layer_y[i] = std::tanh(z);
+    	std::vector<double> mult_intermediate(x.size(), 0.0);
+    	std::transform(x.begin(), x.end(), hidden_layer_weights[i].begin(), mult_intermediate.begin(), [](auto x, auto y)
+                   { return x * y; });
+    	auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+                         { return (x + y); });
+
+	hidden_layer_y[i] = std::tanh(z);
     }
 
     // add in our bias term!
@@ -99,7 +110,7 @@ void forward_pass(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_y, 
 
     for (auto i = 0; i < output_layer_weights.size(); i++)
     {
-        auto z = std::inner_product(hidden_output_array.begin(), hidden_output_array.end(), output_layer_weights[i].begin(), 0.0);
+        double z = std::inner_product(hidden_output_array.begin(), hidden_output_array.end(), output_layer_weights[i].begin(), 0.0);
 	output_layer_y[i] = 1.0 / (1.0 + std::exp(-z));
     }
 }
@@ -147,16 +158,7 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
         double weighted_error;
         std::vector<double> mult_intermediate(error_weights.size(), 0.0);
 
-        // for (auto j = 0; j <= error_weights.size(); j++)
-        // {
-        // std::transform(error_weights.begin(), error_weights.end(), output_layer_error.begin(), mult_intermediate.begin(), [](auto x, auto y)
-        //                { return x * y; });
-        // weighted_error = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-        //                              { return (x + y); });
-
-        auto z = std::inner_product(error_weights.begin(), error_weights.end(), output_layer_error.begin(), 0.0);
-        // hidden_layer_y[i] = std::tanh(z);
-        // }
+        double z = std::inner_product(error_weights.begin(), error_weights.end(), output_layer_error.begin(), 0.0);
 
         hidden_layer_error[i] = z * derivative;
     }
@@ -211,12 +213,50 @@ int main(void)
     // our mnist reader will push out our labels (y_train, y_test), as well as our images (x_train, x_test)
     std::vector<uint16_t> y_train;
     std::vector<std::vector<std::vector<uint8_t>>> x_train;
-
+    
     std::vector<uint16_t> y_test;
     std::vector<std::vector<std::vector<uint8_t>>> x_test;
 
     read_mnist(TRAIN_IMAGE_FILENAME, TRAIN_LABEL_FILENAME, y_train, x_train);
     read_mnist(TEST_IMAGE_FILENAME, TEST_LABEL_FILENAME, y_test, x_test);
+
+    // flatten the x_train, x_tests
+    std::vector<std::vector<uint8_t>> flat_x_train;
+   
+    for (auto i = 0; i < x_train.size(); i++)
+    {
+	std::vector<uint8_t> temp_image;
+
+	for (auto j = 0; j < x_train[i].size(); j++){	
+            temp_image.insert(temp_image.end(), x_train[i][j].begin(), x_train[i][j].end());
+	}
+	flat_x_train.push_back(temp_image);
+    }
+
+    std::vector<std::vector<uint8_t>> flat_x_test;
+   
+    for (auto i = 0; i < x_test.size(); i++)
+    {
+	std::vector<uint8_t> temp_image;
+
+	for (auto j = 0; j < x_test[i].size(); j++){	
+            temp_image.insert(temp_image.end(), x_test[i][j].begin(), x_test[i][j].end());
+	}
+	flat_x_test.push_back(temp_image);
+    }
+
+    // Set up the ability to normalize the data
+    //double sum = std::accumulate(x_train.begin(), x_train.end(), 0.0);
+    //double mean =  sum / x_train.size();
+
+    //double accum = 0.0;
+    //std::for_each (x_train.begin(), x_train.end(), [&](const double d) {
+    //    accum += (d - mean) * (d - mean);
+    //});
+
+    //double stdev = sqrt(accum / (x_train.size()-1));
+
+    //std::transform(x_train.begin(), x_train_normalized.begin(), [&](double x){return (x - mean)/stdev;}) 
 
     // index_list = list(range(len(x_train)))
     // std::vector<int> index_list =
@@ -254,7 +294,7 @@ int main(void)
         // # don't really like that we're using global vars
         // # below doesn't give a good feel as to what's going on for a programmer
         std::cout << "Training set size " << x_train.size() << std::endl;
-        for (auto j = 0; j < x_train.size(); j++)
+        for (auto j = 0; j < flat_x_train.size(); j++)
         {
             if (j % 10000 == 0)
             {
@@ -266,14 +306,14 @@ int main(void)
             }
 
             // flatten this x_train
-            std::vector<uint8_t> flat_x;
-            for (auto i = 0; i < x_train[j].size(); i++)
-            {
-                flat_x.insert(flat_x.end(), x_train[j][i].begin(), x_train[j][i].end());
-            }
+            // std::vector<uint8_t> flat_x;
+            // for (auto i = 0; i < x_train[j].size(); i++)
+            // {
+            //    flat_x.insert(flat_x.end(), x_train[j][i].begin(), x_train[j][i].end());
+            //}
 
 	    
-            forward_pass(flat_x, hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            forward_pass(flat_x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -285,7 +325,7 @@ int main(void)
             }
             backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
 
-            adjust_weights(flat_x, hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
+            adjust_weights(flat_x_train[j], hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
         }
         std::cout << std::endl;
         auto correct_test_results = 0;
