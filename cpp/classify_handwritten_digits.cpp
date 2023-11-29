@@ -246,20 +246,35 @@ int main(void)
     }
 
     // Set up the ability to normalize the data
-    //double sum = std::accumulate(x_train.begin(), x_train.end(), 0.0);
-    //double mean =  sum / x_train.size();
+    std::vector<uint8_t> super_flat;
+    for (auto i = 0; i < flat_x_train.size(); i++) {
+	   super_flat.insert(super_flat.end(), flat_x_train[i].begin(), flat_x_train[i].end());
+    }
 
-    //double accum = 0.0;
-    //std::for_each (x_train.begin(), x_train.end(), [&](const double d) {
-    //    accum += (d - mean) * (d - mean);
-    //});
+    double sum = std::accumulate(super_flat.begin(), super_flat.end(), 0.0);
+    double mean =  sum / super_flat.size();
 
-    //double stdev = sqrt(accum / (x_train.size()-1));
+    double accum = 0.0;
+    std::for_each (super_flat.begin(), super_flat.end(), [&](const double d) {
+        accum += (d - mean) * (d - mean);
+    });
 
-    //std::transform(x_train.begin(), x_train_normalized.begin(), [&](double x){return (x - mean)/stdev;}) 
+    double stdev = sqrt(accum / (super_flat.size()-1));
+
+
+    std::vector<std::vector<double>> x_train_normalized(flat_x_train.size(),std::vector<double>(hidden_layer_inputs));
+    for (auto i = 0; i < flat_x_train.size(); i++) {
+	    std::transform(flat_x_train[i].begin(), flat_x_train[i].end(), x_train_normalized[i].begin(), [&](auto x){return (x - mean)/stdev;});
+    }
+
+    std::vector<std::vector<double>> x_test_normalized(flat_x_test.size(),std::vector<double>(hidden_neuron_count));
+    for (auto i = 0; i < flat_x_test.size(); i++) {
+	    std::transform(flat_x_test[i].begin(), flat_x_test[i].end(), x_test_normalized[i].begin(), [&](auto x){return (x - mean)/stdev;});
+    }
+
 
     // index_list = list(range(len(x_train)))
-    // std::vector<int> index_list =
+    // std::vector<int> index_list; 
 
     // get our weights
     // std::vector<std::vector<double>> neuron_weights;
