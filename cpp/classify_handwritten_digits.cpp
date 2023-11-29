@@ -329,18 +329,18 @@ int main(void)
         }
         std::cout << std::endl;
         auto correct_test_results = 0;
-        for (auto k = 0; k < x_test.size(); k++)
+        for (auto k = 0; k < flat_x_test.size(); k++)
         {
             //      x = np.concatenate((np.array([1.0]), x_test[j]))
 
             // flatten this x_train
-            std::vector<uint8_t> flat_x;
-            for (auto i = 0; i < x_test[k].size(); i++)
-            {
-                flat_x.insert(flat_x.end(), x_test[k][i].begin(), x_test[k][i].end());
-            }
+            // std::vector<uint8_t> flat_x;
+            // for (auto i = 0; i < x_test[k].size(); i++)
+            // {
+            //     flat_x.insert(flat_x.end(), x_test[k][i].begin(), x_test[k][i].end());
+            // }
 
-            forward_pass(flat_x, hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            forward_pass(flat_x_test[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -352,9 +352,9 @@ int main(void)
             }
         }
 
-        std::cout << "Xtrain size " << x_train.size() << std::endl;
-        double training_accuracy = static_cast<double>(correct_training_results) / static_cast<double>(x_train.size());
-        double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(x_test.size());
+        std::cout << "Xtrain size " << flat_x_train.size() << std::endl;
+        double training_accuracy = static_cast<double>(correct_training_results) / static_cast<double>(flat_x_train.size());
+        double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(flat_x_test.size());
 
         show_learning(i, training_accuracy, testing_accuracy);
         std::cout << std::endl;
