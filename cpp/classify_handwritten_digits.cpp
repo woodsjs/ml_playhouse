@@ -8,10 +8,11 @@
 #include <random>
 #include <vector>
 #include <cmath>
+#include <numeric>
 
 // np.random.seed(7)
 const float LEARNING_RATE = 0.01;
-const int EPOCHS = 10;
+const int EPOCHS = 5;
 
 // # Where dez images
 std::string TRAIN_IMAGE_FILENAME = "../data/mnist/train-images.idx3-ubyte";
@@ -77,45 +78,29 @@ void show_learning(int epoch_number, double train_acc, double test_acc)
 
 //     plt.show()
 
-void forward_pass(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
+// we pass in a single image and run it through all of our neurons
+// void forward_pass(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
+void forward_pass(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
 {
 
-    // Let each neuron in the hidden layer look at every image
-
-    for (std::vector<double> neuron_weights : hidden_layer_weights)
+    // we need to unroll x
+    for (auto i = 0; i < hidden_layer_weights.size(); i++)
     {
-        std::vector<double> mult_intermediate(neuron_weights.size(), 0.0);
-
-        for (auto i = 0; i <= hidden_layer_y.size(); i++)
-        {
-            std::transform(x[i].begin(), x[i].end(), neuron_weights.begin(), mult_intermediate.begin(), [](auto x, auto y)
-                           { return x * y; });
-            auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                                 { return (x + y); });
-            hidden_layer_y[i] = std::tanh(z); // tanh of z
-        }
+        auto z = std::inner_product(x.begin(), x.end(), hidden_layer_weights[i].begin(), 0.0);
+        hidden_layer_y[i] = std::tanh(z);
     }
 
     // add in our bias term!
-    std::vector<std::vector<double>> hidden_output_array;
-    for (double hidden_y_value : hidden_layer_y)
-    {
-        hidden_output_array.push_back({1.0, hidden_y_value});
-    }
+
+    std::vector<double> hidden_output_array = {1.0};
+    hidden_output_array.insert(hidden_output_array.end(), hidden_layer_y.begin(), hidden_layer_y.end());
 
     // show the output of each hidden layer, to each input of the output layer
-    for (std::vector<double> neuron_weights : output_layer_weights)
-    {
-        std::vector<double> mult_intermediate(neuron_weights.size(), 0.0);
 
-        for (auto i = 0; i <= output_layer_y.size(); i++)
-        {
-            std::transform(hidden_output_array[i].begin(), hidden_output_array[i].end(), neuron_weights.begin(), mult_intermediate.begin(), [](auto x, auto y)
-                           { return x * y; });
-            auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                                 { return (x + y); });
-            output_layer_y[i] = 1.0 / (1.0 + exp(-z));
-        }
+    for (auto i = 0; i < output_layer_weights.size(); i++)
+    {
+        auto z = std::inner_product(hidden_output_array.begin(), hidden_output_array.end(), output_layer_weights[i].begin(), 0.0);
+	output_layer_y[i] = 1.0 / (1.0 + std::exp(-z));
     }
 }
 
@@ -134,76 +119,92 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
 
     //  output_layer_weights is a 2d array, 10 rows (one for each neuron), 25 columns (one for each output of hidden y)
     //  hidden_layer_Y is a 1d array with 25 values
+   
+// // tanh derivative, for the hidden layer
+// //  for each hidden neuron
+// //      derivative = 1.0 - pow(neuron_y[i], 2);
+// //    neuron_error[i] = neuron_weights[2][1] * neuron_error[output error] * derivative;
+
     for (auto i = 0; i < hidden_layer_y.size(); i++)
     {
         std::vector<double> error_weights;
 
         // here we are adding each row of the output layer weights to the error_weights var
+	// We're flattening our weights out
+	// THey currently sit here in 10 vectors of 25 values;
+	//
+	// THis needs to be the current hidden neurons vector, for each output vector
+	// So the ith value in each of the 10 vectors
         for (std::vector<double> weights : output_layer_weights)
         {
-            error_weights.push_back(weights[i + 1]);
+            error_weights.push_back(weights[i]);
         }
 
-        // error_weight_array = np.array(error_weights)
-
         // time to backprop the error
-        double derivative = 1.0 - pow(hidden_layer_y[i], 2); // tanh dervative
+	// generate the derivative of THIS neuron, (there are 25 neurons)
+        double derivative = 1.0 - pow(hidden_layer_y[i], 2); 
+							    
         double weighted_error;
         std::vector<double> mult_intermediate(error_weights.size(), 0.0);
 
-        for (auto j = 0; j <= error_weights.size(); j++)
-        {
-            std::transform(error_weights.begin(), error_weights.end(), output_layer_error.begin(), mult_intermediate.begin(), [](auto x, auto y)
-                           { return x * y; });
-            weighted_error = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                                         { return (x + y); });
-        }
+        // for (auto j = 0; j <= error_weights.size(); j++)
+        // {
+        // std::transform(error_weights.begin(), error_weights.end(), output_layer_error.begin(), mult_intermediate.begin(), [](auto x, auto y)
+        //                { return x * y; });
+        // weighted_error = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+        //                              { return (x + y); });
 
-        hidden_layer_error[i] = weighted_error * derivative;
+        auto z = std::inner_product(error_weights.begin(), error_weights.end(), output_layer_error.begin(), 0.0);
+        // hidden_layer_y[i] = std::tanh(z);
+        // }
+
+        hidden_layer_error[i] = z * derivative;
     }
 }
 
 // def adjust_weights(x):
-void adjust_weights(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
+// void adjust_weights(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
+void adjust_weights(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
 {
     // for i, error in enumerate(hidden_layer_error):
     //     hidden_layer_w[i] -= (x * LEARNING_RATE * error) # updating our weights
 
     double local_learning_rate = LEARNING_RATE;
 
-    // this actually probably has to be in a for loop
-    for (auto i = 0; i < hidden_layer_error.size(); i++)
+    for (auto i = 0; i < hidden_layer_error.size(); ++i)
     {
-        // std::vector<double> intermediate_results(hidden_layer_weights.size(), 0);
-        // std::transform(x[i].begin(), x[i].end(), hidden_layer_weights[i].begin(), intermediate_results.begin(), [&](auto x, auto y)
-        //                { return y - (x * LEARNING_RATE * hidden_layer_error); });
-        std::vector<double> layer_weights = hidden_layer_weights[i];
-        std::transform(x[i].begin(), x[i].end(), layer_weights.begin(), hidden_layer_weights[i].begin(), [=](auto x, auto y)
-                       { return y - (x * local_learning_rate * hidden_layer_error[i]); });
+    //     if (intermediate_results.size() < hidden_layer_weights[i].size())
+    //     {
+    //         intermediate_results.resize(hidden_layer_weights[i].size());
+    //     }
+
+        std::vector<double> intermediate_results(x.size(), 0.0);
+        std::transform(x.begin(), x.end(), hidden_layer_weights[i].begin(), intermediate_results.begin(), [&i, &hidden_layer_error](auto x, auto y)
+                       { return y - (x * LEARNING_RATE * hidden_layer_error[i]); });
+
+        hidden_layer_weights.at(i) = intermediate_results;
     }
+
+    // add intermediate results destroy
+    // intermediate_results.clear();
 
     // add in our bias term!
-    // hidden_output_array = np.concatenate((np.array([1.0]), hidden_layer_y))
-    std::vector<std::vector<double>> hidden_output_array;
-    for (double hidden_y_value : hidden_layer_y)
-    {
-        hidden_output_array.push_back({1.0, hidden_y_value});
-    }
+    std::vector<std::vector<double>> hidden_output_array(hidden_layer_y.size(), std::vector<double>(2,0.0));
+    std::transform(hidden_layer_y.begin(), hidden_layer_y.end(), hidden_output_array.begin(),[](auto x) -> std::vector<double> {return {1.0, x};});
 
-    // for i, error in enumerate(output_layer_error):
-    //     output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error)
     for (auto i = 0; i < output_layer_error.size(); i++)
     {
         std::vector<double> layer_weights = output_layer_weights[i];
         std::transform(hidden_output_array[i].begin(), hidden_output_array[i].end(), layer_weights.begin(), output_layer_weights[i].begin(), [=](auto x, auto y)
                        { return y - (x * local_learning_rate * output_layer_error[i]); });
     }
+
 }
 
 int main(void)
 {
     auto hidden_neuron_count = 25;
-    auto hidden_layer_inputs = 725;
+    auto hidden_layer_inputs = 784;
 
     auto output_neuron_count = 10;
 
@@ -227,15 +228,15 @@ int main(void)
     // # 25 neurons, 784 inputs for our hidden layer
     std::vector<std::vector<double>> hidden_layer_weights = init_neuron_weights(hidden_neuron_count, hidden_layer_inputs);
     // 25neurons gives us 25 outputs, init to zero
-    std::vector<double> hidden_layer_y(hidden_neuron_count, 0);
+    std::vector<double> hidden_layer_y(hidden_neuron_count, 0.0);
     // also, 25 neurons, 25 error values, init to zero
-    std::vector<double> hidden_layer_error(hidden_neuron_count, 0);
+    std::vector<double> hidden_layer_error(hidden_neuron_count, 0.0);
 
     // the hidden layer has 25 outputs, so the output layer has 25 inputs
     // it has 10 outputs, since we're determining values 0-9
     std::vector<std::vector<double>> output_layer_weights = init_neuron_weights(output_neuron_count, hidden_neuron_count);
-    std::vector<double> output_layer_y(output_neuron_count, 0);
-    std::vector<double> output_layer_error(output_neuron_count, 0);
+    std::vector<double> output_layer_y(output_neuron_count, 0.0);
+    std::vector<double> output_layer_error(output_neuron_count, 0.0);
 
     // # here we're going to show our learning
     // chart_x = []
@@ -264,7 +265,15 @@ int main(void)
                 std::cout << "*";
             }
 
-            forward_pass(x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            // flatten this x_train
+            std::vector<uint8_t> flat_x;
+            for (auto i = 0; i < x_train[j].size(); i++)
+            {
+                flat_x.insert(flat_x.end(), x_train[j][i].begin(), x_train[j][i].end());
+            }
+
+	    
+            forward_pass(flat_x, hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -274,12 +283,9 @@ int main(void)
             {
                 correct_training_results += 1;
             }
-
-            // backward_pass(y_train[j], hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
             backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
 
-            adjust_weights(x_train[j], hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
-            //          adjust_weights(x)
+            adjust_weights(flat_x, hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
         }
         std::cout << std::endl;
         auto correct_test_results = 0;
@@ -287,11 +293,15 @@ int main(void)
         {
             //      x = np.concatenate((np.array([1.0]), x_test[j]))
 
-            //      forward_pass(x)
-            forward_pass(x_train[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            // flatten this x_train
+            std::vector<uint8_t> flat_x;
+            for (auto i = 0; i < x_test[k].size(); i++)
+            {
+                flat_x.insert(flat_x.end(), x_test[k][i].begin(), x_test[k][i].end());
+            }
 
-            //      if output_layer_y.argmax() == y_test[j].argmax():
-            //          correct_test_results += 1
+            forward_pass(flat_x, hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
             int max_y = std::distance(output_layer_y.begin(), result);
@@ -303,7 +313,7 @@ int main(void)
         }
 
         std::cout << "Xtrain size " << x_train.size() << std::endl;
-        double training_accuracy = static_cast<double>( correct_training_results) / static_cast<double>( x_train.size());
+        double training_accuracy = static_cast<double>(correct_training_results) / static_cast<double>(x_train.size());
         double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(x_test.size());
 
         show_learning(i, training_accuracy, testing_accuracy);
