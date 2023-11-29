@@ -304,14 +304,6 @@ int main(void)
             {
                 std::cout << "*";
             }
-
-            // flatten this x_train
-            // std::vector<uint8_t> flat_x;
-            // for (auto i = 0; i < x_train[j].size(); i++)
-            // {
-            //    flat_x.insert(flat_x.end(), x_train[j][i].begin(), x_train[j][i].end());
-            //}
-
 	    
             forward_pass(flat_x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
@@ -332,13 +324,6 @@ int main(void)
         for (auto k = 0; k < flat_x_test.size(); k++)
         {
             //      x = np.concatenate((np.array([1.0]), x_test[j]))
-
-            // flatten this x_train
-            // std::vector<uint8_t> flat_x;
-            // for (auto i = 0; i < x_test[k].size(); i++)
-            // {
-            //     flat_x.insert(flat_x.end(), x_test[k][i].begin(), x_test[k][i].end());
-            // }
 
             forward_pass(flat_x_test[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
