@@ -80,7 +80,7 @@ void show_learning(int epoch_number, double train_acc, double test_acc)
 
 // we pass in a single image and run it through all of our neurons
 // void forward_pass(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
-void forward_pass(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
+void forward_pass(std::vector<double> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
 {
 
     // we need to unroll x
@@ -166,7 +166,7 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
 
 // def adjust_weights(x):
 // void adjust_weights(std::vector<std::vector<uint8_t>> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
-void adjust_weights(std::vector<uint8_t> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
+void adjust_weights(std::vector<double> &x, std::vector<double> &hidden_layer_error, std::vector<double> &output_layer_error, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<double> &hidden_layer_y, std::vector<std::vector<double>> &output_layer_weights)
 {
     // for i, error in enumerate(hidden_layer_error):
     //     hidden_layer_w[i] -= (x * LEARNING_RATE * error) # updating our weights
@@ -262,12 +262,12 @@ int main(void)
     double stdev = sqrt(accum / (super_flat.size()-1));
 
 
-    std::vector<std::vector<double>> x_train_normalized(flat_x_train.size(),std::vector<double>(hidden_layer_inputs));
+    std::vector<std::vector<double>> x_train_normalized(flat_x_train.size(),std::vector<double>(flat_x_train[0].size())); //don't do this
     for (auto i = 0; i < flat_x_train.size(); i++) {
 	    std::transform(flat_x_train[i].begin(), flat_x_train[i].end(), x_train_normalized[i].begin(), [&](auto x){return (x - mean)/stdev;});
     }
 
-    std::vector<std::vector<double>> x_test_normalized(flat_x_test.size(),std::vector<double>(hidden_neuron_count));
+    std::vector<std::vector<double>> x_test_normalized(flat_x_test.size(),std::vector<double>(flat_x_test[0].size())); //don't do this
     for (auto i = 0; i < flat_x_test.size(); i++) {
 	    std::transform(flat_x_test[i].begin(), flat_x_test[i].end(), x_test_normalized[i].begin(), [&](auto x){return (x - mean)/stdev;});
     }
@@ -308,8 +308,8 @@ int main(void)
 
         // # don't really like that we're using global vars
         // # below doesn't give a good feel as to what's going on for a programmer
-        std::cout << "Training set size " << x_train.size() << std::endl;
-        for (auto j = 0; j < flat_x_train.size(); j++)
+        std::cout << "Training set size " << x_train_normalized.size() << std::endl;
+        for (auto j = 0; j < x_train_normalized.size(); j++)
         {
             if (j % 10000 == 0)
             {
@@ -320,7 +320,7 @@ int main(void)
                 std::cout << "*";
             }
 	    
-            forward_pass(flat_x_train[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            forward_pass(x_train_normalized[j], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -332,15 +332,15 @@ int main(void)
             }
             backward_pass(y_train, hidden_layer_error, output_layer_error, output_layer_y, hidden_layer_y, output_layer_weights);
 
-            adjust_weights(flat_x_train[j], hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
+            adjust_weights(x_train_normalized[j], hidden_layer_error, output_layer_error, hidden_layer_weights, hidden_layer_y, output_layer_weights);
         }
         std::cout << std::endl;
         auto correct_test_results = 0;
-        for (auto k = 0; k < flat_x_test.size(); k++)
+        for (auto k = 0; k < x_test_normalized.size(); k++)
         {
             //      x = np.concatenate((np.array([1.0]), x_test[j]))
 
-            forward_pass(flat_x_test[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
+            forward_pass(x_test_normalized[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
             std::vector<double>::iterator result;
             result = std::max_element(output_layer_y.begin(), output_layer_y.end());
@@ -352,9 +352,9 @@ int main(void)
             }
         }
 
-        std::cout << "Xtrain size " << flat_x_train.size() << std::endl;
-        double training_accuracy = static_cast<double>(correct_training_results) / static_cast<double>(flat_x_train.size());
-        double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(flat_x_test.size());
+        std::cout << "Xtrain size " << x_train_normalized.size() << std::endl;
+        double training_accuracy = static_cast<double>(correct_training_results) / static_cast<double>(x_train_normalized.size());
+        double testing_accuracy = static_cast<double>(correct_test_results) / static_cast<double>(x_test_normalized.size());
 
         show_learning(i, training_accuracy, testing_accuracy);
         std::cout << std::endl;
