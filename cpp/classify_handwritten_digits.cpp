@@ -83,34 +83,45 @@ void show_learning(int epoch_number, double train_acc, double test_acc)
 void forward_pass(std::vector<double> &x, std::vector<double> &hidden_layer_y, std::vector<double> &output_layer_y, std::vector<std::vector<double>> &hidden_layer_weights, std::vector<std::vector<double>> &output_layer_weights)
 {
 
-    // we need to unroll x
-//    for (auto i = 0; i < hidden_layer_weights.size(); i++)
-//    {
-//        double z = std::inner_product(x.begin(), x.end(), hidden_layer_weights[i].begin(), 0.0);
-//        hidden_layer_y[i] = std::tanh(z);
-//    }
-
+ 
     for (auto i = 0; i < hidden_layer_weights.size(); i++)
     {
-    	std::vector<double> mult_intermediate(x.size(), 0.0);
-    	std::transform(x.begin(), x.end(), hidden_layer_weights[i].begin(), mult_intermediate.begin(), [](auto x, auto y)
-                   { return x * y; });
-    	auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
-                         { return (x + y); });
-
-	hidden_layer_y[i] = std::tanh(z);
+	
+        // double z = std::inner_product(x.begin(), x.end(), hidden_layer_weights[i].begin(), 0.0);
+	double z;
+	for ( auto j = 0; j < hidden_layer_weights[i].size(); j++) {
+	  z += x[i]*hidden_layer_weights[i][j];
+	}
+        hidden_layer_y[i] = std::tanh(z);
     }
 
-    // add in our bias term!
 
+//   for (auto i = 0; i < hidden_layer_weights.size(); i++)
+//   {
+//   	std::vector<double> mult_intermediate(x.size(), 0.0);
+//   	std::transform(x.begin(), x.end(), hidden_layer_weights[i].begin(), mult_intermediate.begin(), [](auto x, auto y)
+//                  { return x * y; });
+//   	auto z = std::reduce(mult_intermediate.begin(), mult_intermediate.end(), 0.0, [](auto x, auto y)
+//                        { return (x + y); });
+//
+//	hidden_layer_y[i] = std::tanh(z);
+//    }
+
+    // add in our bias term!
+    // show the output of each hidden layer, to each input of the output layer
     std::vector<double> hidden_output_array = {1.0};
     hidden_output_array.insert(hidden_output_array.end(), hidden_layer_y.begin(), hidden_layer_y.end());
 
-    // show the output of each hidden layer, to each input of the output layer
 
     for (auto i = 0; i < output_layer_weights.size(); i++)
     {
-        double z = std::inner_product(hidden_output_array.begin(), hidden_output_array.end(), output_layer_weights[i].begin(), 0.0);
+        //double z = std::inner_product(hidden_output_array.begin(), hidden_output_array.end(), output_layer_weights[i].begin(), 0.0);
+	
+	double z;
+	for ( auto j = 0; j < output_layer_weights[i].size(); j++) {
+	  z += hidden_output_array[i]*output_layer_weights[i][j];
+	}
+ 
 	output_layer_y[i] = 1.0 / (1.0 + std::exp(-z));
     }
 }
@@ -148,17 +159,23 @@ void backward_pass(std::vector<uint16_t> &y_truth, std::vector<double> &hidden_l
 	// So the ith value in each of the 10 vectors
         for (std::vector<double> weights : output_layer_weights)
         {
-            error_weights.push_back(weights[i]);
+            error_weights.push_back(weights[i+1]);
         }
 
         // time to backprop the error
 	// generate the derivative of THIS neuron, (there are 25 neurons)
         double derivative = 1.0 - pow(hidden_layer_y[i], 2); 
 							    
-        double weighted_error;
-        std::vector<double> mult_intermediate(error_weights.size(), 0.0);
+        //double weighted_error;
+        //std::vector<double> mult_intermediate(error_weights.size(), 0.0);
 
-        double z = std::inner_product(error_weights.begin(), error_weights.end(), output_layer_error.begin(), 0.0);
+       // double z = std::inner_product(error_weights.begin(), error_weights.end(), output_layer_error.begin(), 0.0);
+	
+	double z;
+	for ( auto j = 0; j < output_layer_error.size(); j++) {
+	  z += error_weights[j]*output_layer_error[j];
+	}
+ 
 
         hidden_layer_error[i] = z * derivative;
     }
@@ -338,7 +355,6 @@ int main(void)
         auto correct_test_results = 0;
         for (auto k = 0; k < x_test_normalized.size(); k++)
         {
-            //      x = np.concatenate((np.array([1.0]), x_test[j]))
 
             forward_pass(x_test_normalized[k], hidden_layer_y, output_layer_y, hidden_layer_weights, output_layer_weights);
 
