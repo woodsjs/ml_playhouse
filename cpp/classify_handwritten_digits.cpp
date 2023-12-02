@@ -156,12 +156,16 @@ void adjust_weights(std::vector<double> &x, std::vector<double> &hidden_layer_er
     // add intermediate results destroy
 
     // add in our bias term!
-    std::vector<std::vector<double>> hidden_output_array(hidden_layer_y.size(), std::vector<double>(2,0.0));
-    std::transform(hidden_layer_y.begin(), hidden_layer_y.end(), hidden_output_array.begin(),[](auto x) -> std::vector<double> {return {1.0, x};});
+    //std::vector<std::vector<double>> hidden_output_array(hidden_layer_y.size(), std::vector<double>(2,0.0));
+    //std::transform(hidden_layer_y.begin(), hidden_layer_y.end(), hidden_output_array.begin(),[](auto x) -> std::vector<double> {return {1.0, x};});
 
-   for ( auto i = 0; i < output_layer_error.size(); i++ ) {
-	   for ( auto j = 0; j < output_layer_weights.size(); j++) {
-		   output_layer_weights[i][j] -= ( hidden_output_array[i][j] * LEARNING_RATE * output_layer_error[i]);
+   for ( auto i = 0; i < output_layer_error.size(); i++ ) { // 10 rows
+	   for ( auto j = 0; j < output_layer_weights[i].size(); j++) { // 10 rows of 25 cols
+			// hidden output array is 25 rows, 2 cols
+			// output_layer_error is 10 rows
+		
+		   output_layer_weights[i][j] -= ( 1.0 * LEARNING_RATE * output_layer_error[i]);
+		   output_layer_weights[i][j] -= ( hidden_layer_y[j] * LEARNING_RATE * output_layer_error[i]);
 	   }
    }
 
