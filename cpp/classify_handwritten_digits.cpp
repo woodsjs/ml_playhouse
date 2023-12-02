@@ -159,15 +159,6 @@ void adjust_weights(std::vector<double> &x, std::vector<double> &hidden_layer_er
     std::vector<std::vector<double>> hidden_output_array(hidden_layer_y.size(), std::vector<double>(2,0.0));
     std::transform(hidden_layer_y.begin(), hidden_layer_y.end(), hidden_output_array.begin(),[](auto x) -> std::vector<double> {return {1.0, x};});
 
-   // for (auto i = 0; i < output_layer_error.size(); i++)
-   // {
-   //     std::vector<double> layer_weights(hidden_output_array.size(),0.0);
-   //     std::transform(hidden_output_array[i].begin(), hidden_output_array[i].end(), layer_weights.begin(), output_layer_weights[i].begin(), [=](auto x, auto y)
-   //                    { return y - (x * local_learning_rate * output_layer_error[i]); });
-   // }
-     
-//        for i, error in enumerate(output_layer_error):
-//            output_layer_w[i] -= (hidden_output_array * LEARNING_RATE * error)
    for ( auto i = 0; i < output_layer_error.size(); i++ ) {
 	   for ( auto j = 0; j < output_layer_weights.size(); j++) {
 		   output_layer_weights[i][j] -= ( hidden_output_array[i][j] * LEARNING_RATE * output_layer_error[i]);
