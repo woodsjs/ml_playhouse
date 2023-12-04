@@ -40,4 +40,15 @@ model = keras.Sequential([
             kernel_initializer=initializer,
             bias_initializer='zeros')])
 
+# SGD, learning rate 0.01. Let everything else ride
+# MSE as loss, accuracy reporting
+opt = keras.optimizers.SGD(learning_rate=0.01)
+
+model.compile(loss='mean_squared_error', optimizer=opt, metrics=['accuracy'])
+
+# Train for 20 Epochs, watch it blow away our cpp code...
+history = model.fit(train_images, train_labels,
+        validation_data=(test_images, test_labels),
+        epochs=EPOCHS, batch_size=BATCH_SIZE,
+        verbose=2, shuffle=True)
 
