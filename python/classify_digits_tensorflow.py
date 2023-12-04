@@ -11,7 +11,7 @@ EPOCHS = 20
 BATCH_SIZE = 1
 
 mnist = keras.datasets.mnist
-(train_images, train_labels), (test_images, test_labels) = mnist.load.data()
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
 #standardize the data
 mean = np.mean(train_images)
@@ -34,8 +34,8 @@ initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
 model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
         keras.layers.Dense(25, activation='tanh',
-            kernel_intializer=initializer,
-            bias_intiializer='zeros'),
+            kernel_initializer=initializer,
+            bias_initializer='zeros'),
         keras.layers.Dense(10, activation='sigmoid',
             kernel_initializer=initializer,
             bias_initializer='zeros')])
