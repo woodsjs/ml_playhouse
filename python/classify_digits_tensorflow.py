@@ -24,6 +24,20 @@ test_images = (test_images - mean) / stddev
 train_labels = to_categorical(train_labels, num_classes=10)
 test_labels = to_categorical(test_labels, num_classes=10)
 
+# Initialize the weights
+initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
 
+# Create the model
+# 784 inputs, 2 dense with 25 and 10 neurons
+# Tanh as activation for hidden
+# SIgmoid for output layer
+model = keras.Sequential([
+        keras.layers.Flatten(input_shape=(28, 28)),
+        keras.layers.Dense(25, activation='tanh',
+            kernel_intializer=initializer,
+            bias_intiializer='zeros'),
+        keras.layers.Dense(10, activation='sigmoid',
+            kernel_initializer=initializer,
+            bias_initializer='zeros')])
 
 
