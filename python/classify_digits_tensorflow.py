@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras import initializers
 import numpy as np
 import logging
 
@@ -25,7 +26,8 @@ train_labels = to_categorical(train_labels, num_classes=10)
 test_labels = to_categorical(test_labels, num_classes=10)
 
 # Initialize the weights
-# initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
+#initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
+initializer = initializers.GlorotNormal();
 
 # Create the model
 # 784 inputs, 2 dense with 25 and 10 neurons
@@ -34,11 +36,20 @@ test_labels = to_categorical(test_labels, num_classes=10)
 model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
         keras.layers.Dense(25, activation='tanh',
-            kernel_initializer=glorot_uniform,
+            kernel_initializer=initializer,
             bias_initializer='zeros'),
         keras.layers.Dense(10, activation='sigmoid',
-            kernel_initializer=glorot_uniform,
+            kernel_initializer=initializer,
             bias_initializer='zeros')])
+#model = keras.Sequential([
+#        keras.layers.Flatten(input_shape=(28, 28)),
+#        keras.layers.Dense(25, activation='tanh',
+#            kernel_initializer=initializer),
+#        keras.layers.BatchNormalization(),
+#        keras.layers.Dense(10, activation='sigmoid',
+#            kernel_initializer=initializer,
+#            bias_initializer='zeros')])
+#
 
 # SGD, learning rate 0.01. Let everything else ride
 # MSE as loss, accuracy reporting
