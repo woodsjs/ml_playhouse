@@ -25,7 +25,7 @@ train_labels = to_categorical(train_labels, num_classes=10)
 test_labels = to_categorical(test_labels, num_classes=10)
 
 # Initialize the weights
-initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
+# initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
 
 # Create the model
 # 784 inputs, 2 dense with 25 and 10 neurons
@@ -34,10 +34,10 @@ initializer = keras.initializers.RandomUniform( minval=-0.1, maxval=0.1)
 model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
         keras.layers.Dense(25, activation='tanh',
-            kernel_initializer=initializer,
+            kernel_initializer=glorot_uniform,
             bias_initializer='zeros'),
         keras.layers.Dense(10, activation='sigmoid',
-            kernel_initializer=initializer,
+            kernel_initializer=glorot_uniform,
             bias_initializer='zeros')])
 
 # SGD, learning rate 0.01. Let everything else ride
