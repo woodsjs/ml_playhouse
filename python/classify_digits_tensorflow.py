@@ -53,7 +53,9 @@ model = keras.Sequential([
 
 # SGD, learning rate 0.01. Let everything else ride
 # MSE as loss, accuracy reporting
-opt = keras.optimizers.SGD(learning_rate=0.01)
+# opt = keras.optimizers.SGD(learning_rate=0.01)
+
+opt = keras.optimizers.Adam(learning_rate=0.01, epsilon=0.1)
 
 # model.compile(loss='mean_squared_error', optimizer=opt, metrics=['accuracy'])
 
