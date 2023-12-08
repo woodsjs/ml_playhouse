@@ -35,7 +35,7 @@ initializer = initializers.GlorotNormal();
 # SIgmoid for output layer
 model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
-        keras.layers.Dense(25, activation='tanh',
+        keras.layers.Dense(25, activation='relu',
             kernel_initializer=initializer,
             bias_initializer='zeros'),
         keras.layers.Dense(10, activation='sigmoid',
@@ -55,7 +55,9 @@ model = keras.Sequential([
 # MSE as loss, accuracy reporting
 opt = keras.optimizers.SGD(learning_rate=0.01)
 
-model.compile(loss='mean_squared_error', optimizer=opt, metrics=['accuracy'])
+# model.compile(loss='mean_squared_error', optimizer=opt, metrics=['accuracy'])
+
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Train for 20 Epochs, watch it blow away our cpp code...
 history = model.fit(train_images, train_labels,
