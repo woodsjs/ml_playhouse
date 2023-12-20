@@ -34,13 +34,21 @@ model = Sequential()
 
 # for a real DL
 model.add(Dense(
-    64, 
+    128, 
     activation='relu', 
 #    kernel_regularizer=l2(1.0), # regularizer added
 #    bias_regularizer=l2(0.1),   # bias regularizer is separate
     input_shape=[13]))
 # adding dropout, at a rate of 20%
-model.add(Dropout(0.2))
+model.add(Dropout(0.3))
+
+model.add(Dense(
+    128, 
+    activation='relu',
+#    kernel_regularizer=l2(0.1),
+#    bias_regularizer=l2(0.1)
+)) # get thems two layers
+model.add(Dropout(0.3))
 
 model.add(Dense(
     64, 
@@ -48,7 +56,8 @@ model.add(Dense(
 #    kernel_regularizer=l2(0.1),
 #    bias_regularizer=l2(0.1)
 )) # get thems two layers
-model.add(Dropout(0.2))
+model.add(Dropout(0.3))
+
 
 model.add(Dense(
     1, 
