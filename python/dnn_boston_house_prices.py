@@ -5,6 +5,10 @@ from tensorflow.keras.layers import Dense
 import numpy as np
 import logging
 
+# adding L2 regularization, to reduce the effect of weights that aren't 
+# needed for the general problem, but might be for specific problems
+from tensorflow.keras.regularizers import l2
+
 tf.get_logger().setLevel(logging.ERROR)
 
 EPOCHS = 500
@@ -23,10 +27,24 @@ x_test = (raw_x_test - x_mean) / x_stddev
 model = Sequential()
 
 # for a real DL
-model.add(Dense(64, activation='relu', input_shape=[13]))
-model.add(Dense(64, activation='relu')) # get thems two layers
+model.add(Dense(
+    64, 
+    activation='relu', 
+    kernel_regularizer=l2(1.0), # regularizer added
+    bias_regularizer=l2(0.1),   # bias regularizer is separate
+    input_shape=[13]))
 
-model.add(Dense(1, activation='linear'))
+model.add(Dense(
+    64, 
+    activation='relu',
+    kernel_regularizer=l2(0.1),
+    bias_regularizer=l2(0.1))) # get thems two layers
+
+model.add(Dense(
+    1, 
+    activation='linear',
+    kernel_regularizer=l2(0.1),
+    bias_regularizer=l2(0.1)))
 
 # standard linear model
 # model.add(Dense(1, activation='linear', input_shape=[13]))
