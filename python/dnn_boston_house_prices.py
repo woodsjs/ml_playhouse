@@ -9,6 +9,12 @@ import logging
 # needed for the general problem, but might be for specific problems
 from tensorflow.keras.regularizers import l2
 
+# adding dropout, to reduce the possibility of co-adaptation of neurons,
+# which will cause specialization
+# this works by adding a layer between neurons, 
+# blocking a set of connections to a neuron, effectively rendering useless
+from tensorflow.keras.layers import Dropout
+
 tf.get_logger().setLevel(logging.ERROR)
 
 EPOCHS = 500
@@ -33,12 +39,15 @@ model.add(Dense(
     kernel_regularizer=l2(1.0), # regularizer added
     bias_regularizer=l2(0.1),   # bias regularizer is separate
     input_shape=[13]))
+# adding dropout, at a rate of 20%
+model.add(Dropout(0.2))
 
 model.add(Dense(
     64, 
     activation='relu',
     kernel_regularizer=l2(0.1),
     bias_regularizer=l2(0.1))) # get thems two layers
+model.add(Dropout(0.2))
 
 model.add(Dense(
     1, 
