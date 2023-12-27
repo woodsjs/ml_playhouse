@@ -110,6 +110,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+mlplay/
 
 # Spyder project settings
 .spyderproject
