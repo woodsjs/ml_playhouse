@@ -19,7 +19,8 @@ FILE_NAME = '../data/book_store_sales.csv'
 
 def readfile(file_name):
     file = open(file_name, 'r', encoding='utf-8')
-
+    
+    # skip the first line, it's our hearders.
     next(file)
 
     data = []
