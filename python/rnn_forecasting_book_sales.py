@@ -44,6 +44,24 @@ def plotDataset(dataset):
     plt.legend()
     plt.show()
 
+def naivePrediction(test_sales):
+    test_output = test_sales[MIN:]
+    naive_prediction = test_sales[MIN-1:-1]
+
+    x = range(len(test_output))
+
+    plt.plot(x, test_output, 'g-', label='test_output')
+    plt.plot(x, naive_prediction, 'm-', label='naive_prediction')
+
+    plt.title('Book store sales naive prediction')
+
+    plt.axis([0, len(test_output), 0.0, 3000.0])
+    plt.xlabel('months')
+    plt.ylabel('Monthly book store sales')
+
+    plt.legend()
+    plt.show()
+
 sales = readfile(FILE_NAME)
 
 months = len(sales)
@@ -53,3 +71,4 @@ train_sales = sales[0:split]
 test_sales = sales[split:]
 
 plotDataset(sales)
+naivePrediction(test_sales)
