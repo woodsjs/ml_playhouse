@@ -1,21 +1,28 @@
 import numpy as np
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential,load_model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 
 import tensorflow as tf
 import logging
 
+import os.path
+from pathlib import Path
+
 tf.get_logger().setLevel(logging.ERROR)
 
-EPOCHS = 32
+EPOCHS =10 
 BATCH_SIZE = 256
 INPUT_FILE_NAME = '../data/frankenstein.txt'
+SAVE_FILE_NAME = 'text_autocomplete_lstm.keras'
 WINDOW_LENGTH = 40
 WINDOW_STEP = 3
 BEAM_SIZE = 8
 NUM_LETTERS = 11
 
+model = Sequential()
+
+# if the file is not here, train the model.
 file = open(INPUT_FILE_NAME, 'r', encoding= 'utf-8-sig')
 text = file.read()
 file.close()
@@ -47,12 +54,12 @@ for i, fragment in enumerate(fragments):
     for j, char in enumerate(fragment):
         X[i, j, char_to_index[char]] = 1
 
-    target_char = targets[i]
+target_char = targets[i]
 
-    y[i, char_to_index[target_char]] = 1
+y[i, char_to_index[target_char]] = 1
 
 #model
-model = Sequential()
+# model = Sequential()
 
 # return sequences pushes our raw values out to the next layer
 # needed because we're using two LSTM layers
@@ -73,6 +80,8 @@ history = model.fit(X, y, validation_split=0.05,
         epochs=EPOCHS,
         verbose=2,
         shuffle=True)
+
+model.save(SAVE_FILE_NAME)
 
 #Create single beam as a tuple
 # probability (log), string, one hot string
