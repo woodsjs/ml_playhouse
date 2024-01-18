@@ -23,6 +23,10 @@ NUM_LETTERS = 11
 model = Sequential()
 
 # if the file is not here, train the model.
+# if not Path(SAVE_FILE_NAME).exists(): 
+# The idea here would be to NOT ONLY save off the final model,
+# but we would also need to save off our encoding_width, char_to_index 
+# to use in the future encoding scheme. Do we pickle that?
 file = open(INPUT_FILE_NAME, 'r', encoding= 'utf-8-sig')
 text = file.read()
 file.close()
