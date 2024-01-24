@@ -50,4 +50,29 @@ y = np.zeros((len(targets_indexed), MAX_WORDS))
 for i, target_index in enumerate(targets_indexed):
     y[i, target_index] = 1
 
+training_model = Sequential()
+training_model.add(Embedding(
+    output_dim=EMBEDDING_WIDTH,
+    input_dim=MAX_WORDS,
+    mask_zero=True,
+    input_length=None))
+training_model.add(LSTM(128, 
+    return_sequences=True,
+    dropout=0.2,
+    recurrent_dropout=0.2))
+training_model.add(LSTM(128, 
+    dropout=0.2,
+    recurrent_dropout=0.2))
+training_model.add(Dense(128, activation='relu'))
+training_model.add(Dense(MAX_WORDS, activation='softmax'))
 
+training_model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+training_model.summary()
+
+history = training_model.fit(X, y, validation_split=0.05,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        verbose=2,
+        shuffle=True)
+ 
