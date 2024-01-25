@@ -572,4 +572,4 @@ FodyWeavers.xsd
 .vscode/tasks.json
 
 # some data
-# data/glove/
+data/glove/
