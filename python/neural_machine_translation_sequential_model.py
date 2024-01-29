@@ -64,4 +64,30 @@ def read_file_combines(file_name, max_len):
     file.close()
     return src_word_sequences, dest_word_sequences
 
+# tokenize and untokenize
+# returns tuple of tokenizer object, and token sequences
+def tokenize(sequences):
+    # MAX_WORDS-2 used to reserve two indicies for start and stop
+    tokenizer = Tokenizer(num_words=MAX_WORDS-2, oov_token=OOV_WORD)
+    tokenizer.fit_on_texts(sequences)
 
+    token_sequences = tokenizer.texts_to_sequences(sequences)
+
+    return tokenizer, token_sequences
+
+def tokens_to_words(tokenizer, seq):
+    word_seq = []
+
+    for index in seq:
+        if index == PAD_INDEX:
+            word_seq.append('PAD')
+        elif index == OOV_INDEX:
+            word_seq.append(OOV_WORD)
+        elif index == START_INDEX:
+            word_seq.append('START')
+        elif index == STOP_INDEX:
+            word_seq.append('STOP')
+        else:
+            word_seq.append(tokenizer.sequences_to_texts([[index]])[0]
+
+    print(word_seq)
