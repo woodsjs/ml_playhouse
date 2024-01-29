@@ -39,3 +39,29 @@ STOP_INDEX = MAX_WORDS - 1
 MAX_LENGTH = 60
 SRC_DEST_FILE_NAME = '../data/fra.txt'
 
+# read the file and parse
+# return a tuple of source and destination word sequences
+def read_file_combines(file_name, max_len):
+    file = open(file_name, 'r', encoding='utf-8')
+
+    src_word_sequences = []
+    dest_word_sequences = []
+
+    for i, line in enumerate(file):
+        if i == READ_LINES:
+            break
+
+        pair = line.split('\t')
+        word_sequence = text_to_word_sequence(pair[1])
+        src_word_sequence = word_sequence[0:max_len]
+        src_word_sequences.append(src_word_sequence)
+        
+        # work on the destination lang
+        word_sequence = text_to_word_sequence(pair[0])
+        dest_word_sequence = word_sequence[0:max_len]
+        dest_word_sequences.append(dest_word_sequence)
+
+    file.close()
+    return src_word_sequences, dest_word_sequences
+
+
