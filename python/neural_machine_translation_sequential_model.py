@@ -95,3 +95,12 @@ def tokens_to_words(tokenizer, seq):
 src_seq, dest_seq = read_file_combined(SRC_DEST_FILE_NAME, MAX_LENGTH)
 src_tokenizer, src_token_seq = tokenize(src_seq)
 dest_tokenizer, dest_token_seq = tokenize(dest_seq)
+
+# prep training data
+dest_target_token_seq = [x + [STOP_INDEX] for x in dest_token_seq]
+dest_input_token_seq = [[START_INDEX] + x for x in dest_target_token_seq]
+
+src_input_data = pad_sequences(src_token_seq)
+dest_input_data = pad_sequences(dest_input_token_seq, padding='post')
+
+dest_target_data = pad_sequences(dest_target_token_seq, padding='post', maxlen = len(dest_input_data[0]))
