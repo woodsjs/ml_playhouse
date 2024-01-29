@@ -41,7 +41,7 @@ SRC_DEST_FILE_NAME = '../data/fra.txt'
 
 # read the file and parse
 # return a tuple of source and destination word sequences
-def read_file_combines(file_name, max_len):
+def read_file_combined(file_name, max_len):
     file = open(file_name, 'r', encoding='utf-8')
 
     src_word_sequences = []
@@ -88,6 +88,10 @@ def tokens_to_words(tokenizer, seq):
         elif index == STOP_INDEX:
             word_seq.append('STOP')
         else:
-            word_seq.append(tokenizer.sequences_to_texts([[index]])[0]
+            word_seq.append(tokenizer.sequences_to_texts([[index]])[0])
 
     print(word_seq)
+
+src_seq, dest_seq = read_file_combined(SRC_DEST_FILE_NAME, MAX_LENGTH)
+src_tokenizer, src_token_seq = tokenize(src_seq)
+dest_tokenizer, dest_token_seq = tokenize(dest_seq)
