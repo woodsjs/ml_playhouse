@@ -163,15 +163,20 @@ dec_embedding_layer = Embedding(output_dim=EMBEDDING_WIDTH,
         input_dim=MAX_WORDS,
         mask_zero=True)
 
+# THese have to return state after each timestep.
 dec_layer1 = LSTM(LAYER_SIZE, return_state=True,
         return_sequences=True)
 dec_layer2 = LSTM(LAYER_SIZE,
         return_state=True,
         return_sequences=True)
+
+# good ole softmax
 dec_layer3 = Dense(MAX_WORDS, activation='softmax')
 
 #connect the decoder layers
 dec_embedding_layer_outputs = dec_embedding_layer(dec_embedding_input)
+
+# we'll be managing the state of this manually, ti appears
 dec_layer1_outputs, dec_layer1_state_h, dec_layer1_state_c = dec_layer1(dec_embedding_layer_outputs,
         initial_state=[dec_layer1_state_input_h,
             dec_layer1_state_input_c])
@@ -181,6 +186,7 @@ dec_layer2_outputs, dec_layer2_state_h, dec_layer2_state_c = dec_layer2(dec_laye
 dec_layer3_outputs = dec_layer3(dec_layer2_outputs)
 
 # build decoding model
+# note the output includes the state! This is because we'll be managing internal state later.
 dec_model = Model([dec_embedding_input,
     dec_layer1_state_input_h,
     dec_layer1_state_input_c,
