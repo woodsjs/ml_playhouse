@@ -126,4 +126,68 @@ sample_indicies = random.sample(test_indicies, SAMPLE_SIZE)
 sample_input_data = test_src_input_data[sample_indicies]
 sample_target_data = test_dest_target_data[sample_indicies]
 
+# encoding model
+# input is the source language
+enc_embedding_input = Input(shape=(None,))
 
+enc_embedding_layer = Embedding(output_dim=EMBEDDING_WIDTH,
+        input_dim=MAX_WORDS, mask_zero=True)
+enc_layer1 = LSTM(LAYER_SIZE,
+        return_state=True,
+        return_sequences=True)
+enc_layer2 = LSTM(LAYER_SIZE,
+        return_state=True)
+
+# connecting the encoding layers
+enc_embedding_layer_outputs = enc_embedding_layer(enc_embedding_input)
+enc_layer1_outputs, enc_layer1_state_h, enc_layer1_state_c = enc_layer1(enc_embedding_layer_outputs)
+_, enc_layer2_state_h, enc_layer2_state_c =  enc_layer2(enc_layer1_outputs)
+
+# Build
+enc_model = Model(enc_embedding_input,
+    [ enc_layer1_state_h, enc_layer1_state_c,
+        enc_layer2_state_h, enc_layer2_state_c])
+
+enc_model.summary()
+
+# decoder model
+dec_layer1_state_input_h = Input(shape=(LAYER_SIZE,))
+dec_layer1_state_input_c = Input(shape=(LAYER_SIZE,))
+dec_layer2_state_input_h = Input(shape=(LAYER_SIZE,))
+dec_layer2_state_input_c = Input(shape=(LAYER_SIZE,))
+
+dec_embedding_input = Input(shape=(None,))
+
+# layers
+dec_embedding_layer = Embedding(output_dim=EMBEDDING_WIDTH,
+        input_dim=MAX_WORDS,
+        mask_zero=True)
+
+dec_layer1 = LSTM(LAYER_SIZE, return_state=True,
+        return_sequences=True)
+dec_layer2 = LSTM(LAYER_SIZE,
+        return_state=True,
+        return_sequences=True)
+dec_layer3 = Dense(MAX_WORDS, activation='softmax')
+
+#connect the decoder layers
+dec_embedding_layer_outputs = dec_embedding_layer(dec_embedding_input)
+dec_layer1_outputs, dec_layer1_state_h, dec_layer1_state_c = dec_layer1(dec_embedding_layer_outputs,
+        initial_state=[dec_layer1_state_input_h,
+            dec_layer1_state_input_c])
+dec_layer2_outputs, dec_layer2_state_h, dec_layer2_state_c = dec_layer2(dec_layer1_outputs,
+        initial_state=[dec_layer2_state_input_h,
+            dec_layer2_state_input_c])
+dec_layer3_outputs = dec_layer3(dec_layer2_outputs)
+
+# build decoding model
+dec_model = Model([dec_embedding_input,
+    dec_layer1_state_input_h,
+    dec_layer1_state_input_c,
+    dec_layer2_state_input_h,
+    dec_layer2_state_input_c],
+    [dec_layer3_outputs, dec_layer1_state_h,
+        dec_layer1_state_c, dec_layer2_state_h,
+        dec_layer2_state_c])
+
+dec_model.summary()
