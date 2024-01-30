@@ -104,3 +104,26 @@ src_input_data = pad_sequences(src_token_seq)
 dest_input_data = pad_sequences(dest_input_token_seq, padding='post')
 
 dest_target_data = pad_sequences(dest_target_token_seq, padding='post', maxlen = len(dest_input_data[0]))
+
+# splits
+rows = len(src_input_data[:,0])
+all_indicies = list(range(rows))
+test_rows = int(rows * TEST_PERCENT)
+test_indicies = random.sample(all_indicies, test_rows)
+train_indicies = [x for x in all_indicies if x not in test_indicies]
+
+train_src_input_data = src_input_data[train_indicies]
+train_dest_input_data = dest_input_data[train_indicies]
+train_dest_target_data = dest_target_data[train_indicies]
+
+test_src_input_data = src_input_data[test_indicies]
+test_dest_input_data = dest_input_data[test_indicies]
+test_dest_target_data = dest_target_data[test_indicies]
+
+# sample test set
+test_indicies = list(range(test_rows))
+sample_indicies = random.sample(test_indicies, SAMPLE_SIZE)
+sample_input_data = test_src_input_data[sample_indicies]
+sample_target_data = test_dest_target_data[sample_indicies]
+
+
