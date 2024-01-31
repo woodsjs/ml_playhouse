@@ -197,3 +197,68 @@ dec_model = Model([dec_embedding_input,
         dec_layer2_state_c])
 
 dec_model.summary()
+
+# compile full model and train
+# state output is not used when training
+train_enc_embedding_input = Input(shape=(None,))
+train_dec_embedding_input = Input(shape=(None,))
+
+intermediate_state = enc_model(train_enc_embedding_input)
+
+train_dec_output, _, _, _, _ = dec_model([train_dec_embedding_input] + intermediate_state)
+
+training_model = Model([train_enc_embedding_input,
+        train_dec_embedding_input],
+        train_dec_output)
+
+optimizer = RMSprop(lr=0.01)
+
+training_model.compile(loss='sparse_categorical_crossentropy',
+        optimizer=optimizer, 
+        metrics=['accuracy'])
+
+training_model.summary()
+
+for i in range(EPOCHS):
+    print('step: ', i)
+    history = training_model.fit(
+            [train_src_input_data, train_dest_input_data],
+            train_dest_target_data,
+            validation_data=(
+                [test_src_input_data,
+                    test_dest_input_data],
+                test_dest_target_data),
+            batch_size=BATCH_SIZE,
+            epochs=1)
+
+    for (test_input, test_target) in zip(sample_input_data, sample_target_data):
+        x = np.reshape(test_input, (1,-1))
+        last_states = enc_model.predict(x, verbose=0)
+
+        prev_word_index = START_INDEX
+        produced_string=''
+        pred_seq = []
+
+        for j in range(MAX_LENGTH):
+            x = np.reshape(np.array(prev_word_index), (1,1))
+
+            preds, \
+                    dec_layer1_state_h, \
+                    dec_layer1_state_c, \
+                    dec_layer2_state_h, \
+                    dec_layer2_state_c = dec_model.predict([x] + last_states, verbose=0)
+            last_states = [dec_layer1_state_h,
+                    dec_layer1_state_c,
+                    dec_layer2_state_h,
+                    dec_layer2_state_c]
+
+            prev_word_index = np.asarray(preds[0][0]).argmax()
+            pred_seq.append(prev_word_index)
+            if prev_word_index == STOP_INDEX:
+                break
+
+        tokens_to_words(src_tokenizer, test_input)
+        tokens_to_words(dest_tokenizer, test_target)
+        tokens_to_words(dest_tokenizer, pred_seq)
+
+        print('\n\n')
