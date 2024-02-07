@@ -29,3 +29,11 @@ for image in data['images']:
 for anno in data['annotations']:
     image_dict[anno['image_id']].append(anno['caption'])
 
+# get a pretrained model, and rip out the top layers.
+model = vgg19.VGG19(weights='imagenet')
+model.summary()
+
+model_new = Model(inputs=model.input,
+        outputs=model.get_layer('block5_conv4').output)
+
+model_new.summary()
