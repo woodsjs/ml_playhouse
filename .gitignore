@@ -573,3 +573,4 @@ FodyWeavers.xsd
 
 # some data
 data/glove/
+data/coco/
