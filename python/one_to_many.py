@@ -3,9 +3,9 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow import keras
-from tensorflow.keras.models imort Model
-from tensorflow.keras.applications import VGG19
-from tensorflow.keras.applications.VGG19 import preprocess_input
+from tensorflow.keras.models import Model
+from tensorflow.keras.applications import vgg19
+from tensorflow.keras.applications.vgg19 import preprocess_input
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 
