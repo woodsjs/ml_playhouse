@@ -574,3 +574,4 @@ FodyWeavers.xsd
 # some data
 data/glove/
 data/coco/
+python/tf_data/

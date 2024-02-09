@@ -57,12 +57,12 @@ for i, key in enumerate(image_dict.keys()):
     if height > width:
         image = load_img(filename, target_size=(int(height/width*256), 256))
     else:
-        image = load_img(filename, target_size=(256, int(height/width*256)))
+        image = load_img(filename, target_size=(256, int(width/height*256)))
 
 
     width = image.size[0]
     height = image.size[1]
-    image_np = image_to_array(image)
+    image_np = img_to_array(image)
 
     # crop image, leaving inner bits
     h_start = int((height-224)/2)
@@ -80,7 +80,7 @@ for i, key in enumerate(image_dict.keys()):
 
     save_filename = OUTPUT_FILE_DIR + item[0] + '.pickle.gzip'
 
-    pickle_file = gzip.open(sae_filename, 'wb')
+    pickle_file = gzip.open(save_filename, 'wb')
     pickle.dump(y[0], pickle_file)
     pickle_file.close()
 
