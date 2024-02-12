@@ -46,7 +46,7 @@ OOV_INDEX = 1
 START_INDEX = MAX_WORDS - 2
 STOP_INDEX = MAX_WORDS - 1
 MAX_LENGTH = 60
-TRAINING_FILE_DIR = '../data/test_images/'
+TRAINING_FILE_DIR = 'tf_data/feature_vectors/'
 TEST_IMAGES = ['boat.jpg',
         'cat.jpg',
         'table.jpg',
