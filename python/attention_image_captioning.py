@@ -104,4 +104,52 @@ def tokens_to_words(tokenizer, seq):
 image_paths, dest_seq = read_training_file(TRAINING_FILE_DIR + 'caption_file.pickle.gz', MAX_LENGTH)
 dest_tokenizer, dest_token_seq = tokenize(dest_seq)
 
+# Class derived from sequence, to do batch processing
+class ImageCaptionSequence(Sequence):
+
+    def __init__(self, image_paths, dest_input_data, dest_target_data, batch_size):
+        self.image_paths = image_paths
+        self.dest_input_data = dest_input_data
+        self.dest_target_data = dest_target_data
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return int(np.ceil(len(self.dest_input_data) / float(self.batch_size)))
+
+    def __getitem__(self, idx):
+        batch_x0 = self.image_paths[
+                idx * 
+                self.batch_size:(idx + 1) * 
+                self.batch_size]
+        batch_x1 = self.dest_input_data[
+                idx *
+                self.batch_size:(idx + 1) *
+                self.batch_size]
+
+        batch_y = self.dest_target_data[
+                idx *
+                self.batch_size:(idx + 1) *
+                self.batch_size]
+
+        image_features = []
+
+        for image_id in batch_x0:
+            file_name = TRAINING_FILE_DIR + image_id + '.pickle.gzip'
+            pickle_file = gzip.open(file_name, 'rb')
+            feature_vector = pickle.load(pickle_file)
+            pickle_file.close()
+            image_features.append(feature_vector)
+        
+        return [np.array(image_features), np.array(batch_x1)], np.array(batch_y)
+
+# prep training data
+dest_target_token_seq = [x + [STOP_INDEX] for x in dest_token_seq]
+dest_input_token_seq = [[START_INDEX] + x for x in dest_target_token_seq]
+
+dest_input_data = pad_sequences(dest_input_token_seq, padding='post')
+
+dest_target_data = pad_sequences(dest_target_token_seq, padding='post', maxlen = len(dest_input_data[0]))
+
+image_sequence = ImageCaptionSequence(image_paths, dest_input_data, dest_target_data, BATCH_SIZE)
+
 
