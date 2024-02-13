@@ -169,5 +169,73 @@ enc_layer_outputs = [enc_layer_h_outputs, enc_layer_c_outputs]
 enc_model_top = Model(feature_vector_input, enc_layer_outputs)
 enc_model_top.summary()
 
+# crazy that, with how complex a decoder is using attention, 
+# how little code we need to implement. Huzaah to library authors!
 
+dec_feature_vector_input = Input(shape=(14,14,512))
+dec_embedding_input = Input(shape=(None, ))
+dec_layer1_state_input_h = Input(shape=(LAYER_SIZE,))
+dec_layer1_state_input_c = Input(shape=(LAYER_SIZE,))
 
+dec_reshape_layer = Reshape((196, 512),
+        input_shape=(14,14,512,))
+dec_attention_layer = Attention()
+dec_query_layer = Dense(512)
+dec_embedding_layer = Embedding(
+        output_dim=EMBEDDING_WIDTH,
+        input_dim=MAX_WORDS,
+        mask_zero=False)
+
+dec_layer1 = LSTM(LAYER_SIZE, return_state=True, return_sequences=True)
+dec_concat_layer = Concatenate()
+dec_layer2 = Dense(MAX_WORDS, activation='softmax')
+
+# connect the decoder layers
+dec_embedding_layer_outputs = dec_embedding_layer(dec_embedding_input)
+
+dec_reshape_layer_outputs = dec_reshape_layer(dec_feature_vector_input)
+
+dec_layer1_outputs, dec_layer1_state_h, dec_layer1_state_c = dec_layer1(
+        dec_embedding_layer_outputs,
+        initial_state=[dec_layer1_state_input_h,
+            dec_layer1_state_input_c]
+        )
+
+dec_query_layer_outputs = dec_query_layer(dec_layer1_outputs)
+
+dec_attention_layer_outputs = dec_attention_layer(
+        [dec_query_layer_outputs, dec_reshape_layer_outputs])
+
+dec_layer2_inputs = dec_concat_layer(
+        [dec_layer1_outputs, dec_attention_layer_outputs])
+dec_layer2_outputs = dec_layer2(dec_layer2_inputs)
+
+# build
+dec_model = Model([dec_feature_vector_input,
+    dec_embedding_input,
+    dec_layer1_state_input_h,
+    dec_layer1_state_input_c],
+    [dec_layer2_outputs,
+        dec_layer1_state_h,
+        dec_layer1_state_c])
+
+dec_model.summary()
+
+# build full model
+train_feature_vector_input = Input(shape=(14,14,512))
+train_dec_embedding_input = Input(shape=(None,))
+
+intermediate_state = enc_model_top(train_feature_vector_input)
+
+train_dec_output,_,_ = dec_model([train_feature_vector_input,
+    train_dec_embedding_input] + intermediate_state)
+
+training_model = Model([train_feature_vector_input,
+    train_dec_embedding_input],
+    [train_dec_output])
+
+training_model.compile(loss='sparse_categorical_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy'])
+
+training_model.summary()
