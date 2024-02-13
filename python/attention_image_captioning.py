@@ -152,4 +152,22 @@ dest_target_data = pad_sequences(dest_target_token_seq, padding='post', maxlen =
 
 image_sequence = ImageCaptionSequence(image_paths, dest_input_data, dest_target_data, BATCH_SIZE)
 
+feature_vector_input = Input(shape=(14,14,512))
+
+enc_mean_layer = GlobalAveragePooling2D()
+enc_layer_h = Dense(LAYER_SIZE)
+enc_layer_c = Dense(LAYER_SIZE)
+
+#connect those layers
+enc_mean_layer_output = enc_mean_layer(feature_vector_input)
+enc_layer_h_outputs = enc_layer_h(enc_mean_layer_output)
+enc_layer_c_outputs = enc_layer_c(enc_mean_layer_output)
+
+enc_layer_outputs = [enc_layer_h_outputs, enc_layer_c_outputs]
+
+# build
+enc_model_top = Model(feature_vector_input, enc_layer_outputs)
+enc_model_top.summary()
+
+
 
