@@ -239,3 +239,15 @@ training_model.compile(loss='sparse_categorical_crossentropy',
         metrics=['accuracy'])
 
 training_model.summary()
+
+# full encoder model
+conv_model = vgg19.VGG19(weights='imagenet')
+conv_model_outputs = conv_model.get_layer('block5_conv4').output
+
+intermediate_state = enc_model_top(conv_model_outputs)
+inference_enc_model = Model([conv_model.input],
+        intermediate_state + [conv_model_outputs])
+inference_enc_model.summary()
+
+# train this.
+# we're using the image sequence object to give us data batch by batch
