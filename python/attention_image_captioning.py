@@ -251,3 +251,54 @@ inference_enc_model.summary()
 
 # train this.
 # we're using the image sequence object to give us data batch by batch
+for i in range(EPOCHS):
+    print('step: ', i)
+
+    history = training_model.fit(image_sequence, epochs=1)
+
+    for filename in TEST_IMAGES:
+        image = load_img(TEST_FILE_DIR + filename)
+
+        width = image.size[0]
+        height = image.size[1]
+
+        if height > width:
+            image = load_img(TEST_FILE_DIR + filename,
+                    target_size=(int(height/width*256), 256))
+        else:
+            image = load_img(
+                    TEST_FILE_DIR + filename,
+                    target_size=(256, int(width/height*256)))
+
+        width = image.size[0]
+        height = image.size[1]
+        image_np = img_to_array(image)
+
+        # crop to center
+        h_start = int((height-224)/2)
+        w_start = int((width-224)/2)
+        image_np = image_np[h_start:h_start+224,
+                w_start:w_start+224]
+
+        # run image through encoder
+        image_np = np.expand_dims(image_np, axis=0)
+        x = preprocess_image(image_np)
+        dec_layer1_state_h, dec_layer1_state_c, feature_vector = inference_enc_model.predict(x, verbose=0)
+
+        # predict sentence word for word
+        prev_word_index = START_INDEX
+        produced_string = ''
+        pred_seq = []
+
+        for j in range(MAX_LENGTH):
+            x = np.reshape(np.array(prev_word_index), (1, 1))
+            preds, dec_layer1_state_h, dec_layer1_state_c = dec_model.predict(
+                    [feature_vector, x, dec_layer1_state_h, dec_layer1_state_c], verbose = 0)
+            prev_word_index = np.asarray(preds[0][0]).argmax()
+            pred_seq.append(prev_word_index)
+
+            if prev_word_index == STOP_INDEX:
+                break
+
+        tokens_to_words(dest_tokenizer, pred_seq)
+        print('\n\n')
